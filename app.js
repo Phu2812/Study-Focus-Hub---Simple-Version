@@ -25,6 +25,7 @@ let timeLeft = timerSettings.study;
 let isRunning = false;
 let cycleCount = 0; 
 let pendingRestore = null; // Lưu trữ dữ liệu phiên cần khôi phục
+let isRestoringVideo = false; // Cờ để kiểm soát việc phát video khi khôi phục
 
 // Elements
 const playlistListEl = document.getElementById('playlist-list');
@@ -93,8 +94,10 @@ const saveSession = () => {
     // Chỉ lưu nếu Timer đang chạy HOẶC đã có Playlist và Player đã được khởi tạo
     if (isRunning || currentPlaylist.length > 0) {
         let videoTime = 0;
+        let playerState = 0;
         if (player && typeof player.getCurrentTime === 'function') {
             videoTime = Math.floor(player.getCurrentTime());
+            playerState = player.getPlayerState();
         }
 
         const sessionData = {
@@ -107,6 +110,7 @@ const saveSession = () => {
             player: {
                 currentTrackIndex,
                 videoCurrentTime: videoTime,
+                wasPlaying: playerState === 1 // Kiểm tra nếu đang phát
             }
         };
         localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
@@ -142,22 +146,25 @@ const showRestoreModal = () => {
     
     // Kiểm tra tính hợp lệ của video
     const currentVideo = currentPlaylist[savedIndex];
+    const videoSectionEl = document.getElementById('modal-video-section');
+    
     if (currentVideo && savedIndex !== -1) {
         const vTimeFormatted = formatTime(savedVTime);
         videoRestoreInfoEl.innerHTML = `Video: <strong>${currentVideo.title}</strong><br>Tiếp tục tại: <strong>${vTimeFormatted}</strong>`;
         
         // Hiện nút Video
-        document.getElementById('modal-video-section').style.display = 'block';
+        videoSectionEl.style.display = 'block';
         btnRestoreVideo.dataset.time = savedVTime;
         btnRestoreVideo.dataset.index = savedIndex;
-
+        btnRestoreVideo.dataset.play = pendingRestore.player.wasPlaying; // Lưu trạng thái đang phát
+        
     } else {
         // Ẩn nút Video nếu không tìm thấy hoặc chưa có bài hát nào được chọn
-        document.getElementById('modal-video-section').style.display = 'none';
+        videoSectionEl.style.display = 'none';
     }
     
     // Nếu cả hai đều không có gì, không hiện modal
-    if (savedTime <= 0 && document.getElementById('modal-video-section').style.display === 'none') {
+    if (savedTime <= 0 && videoSectionEl.style.display === 'none') {
         localStorage.removeItem(SESSION_KEY);
         pendingRestore = null;
         return;
@@ -419,6 +426,12 @@ const onPlayerStateChange = (event) => {
         playNextTrack();
     }
     if (event.data === 1) { // PLAYING
+        // Nếu đang trong quá trình khôi phục video, đảm bảo player.playVideo() chỉ chạy 1 lần.
+        if (isRestoringVideo) {
+            // Sau khi video bắt đầu chạy, ta không cần cờ nữa
+            isRestoringVideo = false;
+        }
+
         currentVolume = player.getVolume() / 100; 
         playPauseIcon.classList.remove('fa-play');
         playPauseIcon.classList.add('fa-pause');
@@ -434,7 +447,11 @@ const playVideoAtIndex = (index, forcePlay = true, startTime = 0) => {
     
     const videoId = currentPlaylist[index].videoId;
     currentTrackIndex = index;
+    
+    // Đặt cờ nếu ta muốn forcePlay
+    isRestoringVideo = forcePlay;
 
+    // Sử dụng loadVideoById để đảm bảo video được tải đúng thời điểm bắt đầu
     player.loadVideoById({
         videoId: videoId,
         startSeconds: startTime, 
@@ -443,12 +460,15 @@ const playVideoAtIndex = (index, forcePlay = true, startTime = 0) => {
     }); 
     
     if (forcePlay) {
+         // Chạy lệnh play sau 1 giây, đủ thời gian để player tải (state chuyển từ -1 lên 3/5)
+         // Nếu không dùng cờ, lệnh play này có thể bị gọi liên tục
          setTimeout(() => {
-             // Chỉ gọi play nếu Player đã được tải (state khác -1 và khác 0)
-             if (player.getPlayerState() !== -1 && player.getPlayerState() !== 0) {
+             if (player.getPlayerState() !== 1) { // Nếu chưa ở trạng thái PLAYING (1)
                  player.playVideo();
              }
-         }, 500);
+             // Reset cờ sau khi cố gắng phát (để tránh tự động phát lại nếu video dừng)
+             isRestoringVideo = false;
+         }, 1000); // Tăng thời gian trễ lên 1 giây
     }
     
     renderPlaylist(); 
@@ -472,7 +492,7 @@ const togglePlayback = () => {
     const state = player.getPlayerState();
     if (state === 1) {
         player.pauseVideo();
-    } else if (state === 2 || state === 5) { // PAUSED hoặc CUED
+    } else if (state === 2 || state === 5) { // PAUSED (2) hoặc CUED (5)
         player.playVideo();
     } else if (state === -1 && currentPlaylist.length > 0) {
         // Chưa load video nào, load video đầu tiên
@@ -565,7 +585,7 @@ const renderPlaylist = () => {
             
             // Xử lý lại currentTrackIndex sau khi xóa
             if (index === currentTrackIndex) {
-                currentTrackIndex = -1; // Đặt lại để load bài tiếp theo
+                currentTrackIndex = -1; 
                 playNextTrack(); 
             } else if (index < currentTrackIndex) {
                 currentTrackIndex--;
@@ -650,13 +670,26 @@ const init = () => {
     }
 };
 
-// Đóng Modal khi click X hoặc ngoài Modal
-modalCloseBtn.onclick = () => { restoreModalEl.style.display = 'none'; localStorage.removeItem(SESSION_KEY);};
+// SỬA LỖI: Chỉ đóng Modal khi click X
+modalCloseBtn.onclick = () => { 
+    restoreModalEl.style.display = 'none'; 
+    // KHÔNG XÓA SESSION_KEY ở đây để người dùng có thể tải lại trang và khôi phục lại
+};
+// SỬA LỖI: Loại bỏ window.onclick để tránh đóng modal khi click ra ngoài
+// Nếu bạn muốn giữ lại tính năng này, hãy đảm bảo chỉ đóng modal mà không xóa SESSION_KEY:
+/*
 window.onclick = (event) => {
     if (event.target === restoreModalEl) {
         restoreModalEl.style.display = 'none';
-        localStorage.removeItem(SESSION_KEY);
     }
+};
+*/
+
+// Hàm đóng modal và xóa session
+const closeModalAndClearSession = () => {
+    restoreModalEl.style.display = 'none';
+    localStorage.removeItem(SESSION_KEY);
+    pendingRestore = null;
 };
 
 
@@ -677,10 +710,9 @@ btnRestoreTimer.onclick = () => {
     // Đã khôi phục Timer, chuyển sang hỏi Video
     document.getElementById('modal-timer-section').style.display = 'none';
     
-    // Nếu không có video để hỏi, đóng modal luôn
+    // Nếu không có video để hỏi, đóng modal và xóa session luôn
     if (document.getElementById('modal-video-section').style.display === 'none') {
-        restoreModalEl.style.display = 'none';
-        localStorage.removeItem(SESSION_KEY);
+        closeModalAndClearSession();
     }
 };
 
@@ -688,10 +720,10 @@ btnRestoreTimer.onclick = () => {
 btnSkipTimer.onclick = () => {
     // Ẩn Timer, giữ nguyên Video để người dùng quyết định
     document.getElementById('modal-timer-section').style.display = 'none';
-    // Nếu không có video, đóng modal
+    
+    // Nếu không có video, đóng modal và xóa session
     if (document.getElementById('modal-video-section').style.display === 'none') {
-        restoreModalEl.style.display = 'none';
-        localStorage.removeItem(SESSION_KEY);
+        closeModalAndClearSession();
     }
 };
 
@@ -699,12 +731,13 @@ btnSkipTimer.onclick = () => {
 btnRestoreVideo.onclick = (e) => {
     const startTime = parseInt(e.target.dataset.time);
     const index = parseInt(e.target.dataset.index);
+    const wasPlaying = e.target.dataset.play === 'true'; // Lấy trạng thái phát cũ
+    
     if (player && currentPlaylist.length > index) {
-        // Khôi phục video và play ngay tại thời điểm đã lưu
-        playVideoAtIndex(index, true, startTime);
+        // Khôi phục video và play/pause đúng trạng thái đã lưu
+        playVideoAtIndex(index, wasPlaying, startTime);
     }
-    restoreModalEl.style.display = 'none';
-    localStorage.removeItem(SESSION_KEY);
+    closeModalAndClearSession();
 };
 
 // 4. Event Bỏ qua Video
@@ -714,8 +747,7 @@ btnSkipVideo.onclick = () => {
         if (currentTrackIndex === -1) currentTrackIndex = 0;
         playVideoAtIndex(currentTrackIndex, false, 0); // Load video từ đầu, không play
     }
-    restoreModalEl.style.display = 'none';
-    localStorage.removeItem(SESSION_KEY);
+    closeModalAndClearSession();
 };
 
 
