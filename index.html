@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Study Focus Hub | Pomodoro & Playlist</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://www.youtube.com/iframe_api"></script> 
     <link rel="icon" type="image/x-icon" href="favicon.ico"> 
 </head>
@@ -22,11 +23,19 @@
             <div class="controls">
                 <button id="btn-start-pause" class="btn-primary">▶ Bắt Đầu</button>
                 <button id="btn-reset" class="btn-secondary">🔄 Đặt Lại</button>
+                <button id="btn-skip" class="btn-secondary">⏭ Chuyển Tiếp</button> 
             </div>
 
-            <h3>Cài Đặt (Phút)</h3>
+            <h3>Cài Đặt</h3>
             <div class="settings">
-                <label>Học: <input type="number" id="setting-study" value="25" min="1"></label>
+                <label>Tổng chu kỳ: <input type="number" id="setting-total-cycles" value="4" min="1"></label>
+            </div>
+
+            <div class="settings time-settings">
+                <label>Học (Giờ): <input type="number" id="setting-study-hour" value="0" min="0"></label>
+                <label>Học (Phút): <input type="number" id="setting-study-minute" value="25" min="1" max="59"></label>
+            </div>
+            <div class="settings time-settings">
                 <label>Nghỉ Ngắn: <input type="number" id="setting-shortBreak" value="5" min="1"></label>
                 <label>Nghỉ Dài: <input type="number" id="setting-longBreak" value="15" min="1"></label>
             </div>
@@ -37,14 +46,13 @@
             
             <div class="player-embed-container">
                 <div id="youtube-player" class="player-embed"></div> 
-                
                 <div class="placeholder" id="player-placeholder">Vui lòng thêm bài hát vào Playlist</div> 
             </div>
 
             <div class="player-controls">
-                <button id="btn-prev">⏮ Bài Trước</button>
-                <button id="btn-play-pause">⏯ Tạm Dừng/Phát</button>
-                <button id="btn-next">⏭ Bài Tiếp</button>
+                <button id="btn-prev" class="btn-secondary"><i class="fas fa-step-backward"></i></button>
+                <button id="btn-play-pause" class="btn-primary"><i class="fas fa-play"></i></button>
+                <button id="btn-next" class="btn-secondary"><i class="fas fa-step-forward"></i></button>
             </div>
         </section>
 
