@@ -3,14 +3,14 @@
 // =======================================================
 
 const STORAGE_KEY = 'study_playlist_simple';
-const YOUTUBE_OEMBED_API = 'https://www.youtube.com/oembed?url='; // API mới
+const YOUTUBE_OEMBED_API = 'https://www.youtube.com/oembed?url='; // API công khai mới
 const ALARM_FADE_DURATION = 1000; // 1 giây
 
 let player; 
 let currentPlaylist = [];
 let currentTrackIndex = -1;
 let intervalId = null;
-let currentVolume = 0.5; // Lưu trữ mức âm lượng hiện tại của YouTube Player
+let currentVolume = 0.5; 
 
 const timerSettings = {
     study: 25 * 60,
@@ -44,11 +44,10 @@ const getYouTubeVideoId = (url) => {
     return match ? match[1] : null;
 };
 
-// Lấy tiêu đề video từ noembed API (không cần backend)
+// Lấy tiêu đề video từ YouTube oEmbed API
 const fetchVideoTitle = async (videoId) => {
     const url = `https://www.youtube.com/watch?v=${videoId}`;
     try {
-        // Sử dụng oembed.com của YouTube
         const response = await fetch(`${YOUTUBE_OEMBED_API}${encodeURIComponent(url)}&format=json`);
         const data = await response.json();
         return data.title || `Video ${videoId}`;
@@ -67,6 +66,7 @@ const savePlaylist = () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(currentPlaylist));
     renderPlaylist();
 };
+
 
 // =======================================================
 //                   3. POMODORO TIMER LOGIC
@@ -87,35 +87,38 @@ const updateDisplay = () => {
     document.title = `${formatTime(timeLeft)} - ${timerModeEl.textContent}`;
 };
 
-// Hiệu ứng Fade In/Out cho âm thanh
+// Hiệu ứng Fade In/Out cho âm thanh cảnh báo
 const fadeAlarm = (isFadeIn, callback) => {
+    // Đặt lại âm lượng trước khi fade
+    alarmSound.volume = isFadeIn ? 0 : 1;
+    
     if (isFadeIn) {
-        alarmSound.volume = 0;
-        alarmSound.play();
-        let volume = 0;
-        const fadeInterval = setInterval(() => {
-            volume += 0.1;
+        alarmSound.play().catch(e => console.error("Lỗi play audio:", e));
+    }
+    
+    let volume = alarmSound.volume;
+    const step = 0.1;
+    
+    const fadeInterval = setInterval(() => {
+        if (isFadeIn) {
+            volume += step;
             if (volume >= 1) {
                 volume = 1;
                 clearInterval(fadeInterval);
                 if (callback) callback();
             }
-            alarmSound.volume = volume;
-        }, ALARM_FADE_DURATION / 10);
-    } else {
-        let volume = alarmSound.volume;
-        const fadeInterval = setInterval(() => {
-            volume -= 0.1;
-            if (volume <= 0.1) {
+        } else { // Fade Out
+            volume -= step;
+            if (volume <= 0) {
                 volume = 0;
                 alarmSound.pause();
                 alarmSound.currentTime = 0;
                 clearInterval(fadeInterval);
                 if (callback) callback();
             }
-            alarmSound.volume = volume;
-        }, ALARM_FADE_DURATION / 10);
-    }
+        }
+        alarmSound.volume = volume;
+    }, ALARM_FADE_DURATION / 10);
 };
 
 const switchMode = async () => {
@@ -123,8 +126,10 @@ const switchMode = async () => {
     isRunning = false;
     startPauseBtn.textContent = '▶ Bắt Đầu';
     
-    // 1. Dừng nhạc và lưu âm lượng
-    if (player && player.getPlayerState() === 1) { // Nếu đang phát
+    // 1. Tạm dừng nhạc
+    let wasPlaying = false;
+    if (player && player.getPlayerState() === 1) { 
+        wasPlaying = true;
         currentVolume = player.getVolume() / 100;
         player.pauseVideo();
     }
@@ -134,10 +139,9 @@ const switchMode = async () => {
       new Notification(`Hết giờ ${currentMode === 'study' ? 'HỌC' : 'NGHỈ'}!`);
     }
     
-    // Đảm bảo âm thanh có thể chạy
     await alarmSound.load(); 
     fadeAlarm(true, () => {
-        // Sau khi âm thanh thông báo xong (giả sử mất 3s)
+        // Sau khi âm thanh thông báo xong (giả sử 3 giây, tùy thuộc file alarm.mp3)
         setTimeout(() => {
             fadeAlarm(false, () => {
                  // 3. Chuyển mode và cập nhật thời gian
@@ -157,12 +161,12 @@ const switchMode = async () => {
                 updateDisplay();
                 
                 // 4. Tiếp tục phát nhạc
-                if (player) {
+                if (wasPlaying && player) {
                     player.playVideo();
                     player.setVolume(currentVolume * 100);
                 }
             });
-        }, 3000); // Giả sử âm thanh cảnh báo kéo dài 3 giây
+        }, 3000); 
     });
 };
 
@@ -213,7 +217,6 @@ document.querySelectorAll('.settings input').forEach(input => {
     });
 });
 
-// Yêu cầu quyền thông báo
 if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
     Notification.requestPermission();
 }
@@ -237,7 +240,6 @@ window.onYouTubeIframeAPIReady = () => {
 
 const onPlayerReady = (event) => {
     console.log("YouTube Player đã sẵn sàng.");
-    // Ẩn placeholder khi player sẵn sàng
     document.querySelector('.placeholder').style.display = 'none';
 
     if (currentPlaylist.length > 0) {
@@ -247,32 +249,29 @@ const onPlayerReady = (event) => {
 };
 
 const onPlayerStateChange = (event) => {
-    // State 0 là ENDED (kết thúc)
-    if (event.data === 0) {
+    if (event.data === 0) { // ENDED
         playNextTrack();
     }
-    // State 1 là Playing
-    if (event.data === 1) {
-        // Lưu lại mức âm lượng khi bắt đầu phát
+    if (event.data === 1) { // PLAYING
         currentVolume = player.getVolume() / 100; 
     }
 };
 
 const playVideoAtIndex = (index) => {
-    if (currentPlaylist.length === 0) return;
+    if (currentPlaylist.length === 0 || !player) return; // FIX: Kiểm tra player
     currentTrackIndex = index;
     player.loadVideoById(currentPlaylist[currentTrackIndex].videoId);
-    renderPlaylist(); // Cập nhật trạng thái hiển thị đang phát
+    renderPlaylist(); 
 };
 
 const playNextTrack = () => {
-    if (currentPlaylist.length === 0) return;
+    if (currentPlaylist.length === 0 || !player) return; // FIX: Kiểm tra player
     const nextIndex = (currentTrackIndex + 1) % currentPlaylist.length;
     playVideoAtIndex(nextIndex);
 };
 
 const playPrevTrack = () => {
-    if (currentPlaylist.length === 0) return;
+    if (currentPlaylist.length === 0 || !player) return; // FIX: Kiểm tra player
     const prevIndex = (currentTrackIndex - 1 + currentPlaylist.length) % currentPlaylist.length;
     playVideoAtIndex(prevIndex);
 };
@@ -284,7 +283,7 @@ const togglePlayback = () => {
         player.pauseVideo();
     } else if (state === 2 || state === 5) {
         player.playVideo();
-    } else if (state === -1 && currentPlaylist.length > 0) { // Unstarted, phát bài đầu tiên
+    } else if (state === -1 && currentPlaylist.length > 0) {
         playVideoAtIndex(currentTrackIndex !== -1 ? currentTrackIndex : 0);
     }
 };
@@ -308,8 +307,15 @@ document.getElementById('btn-add-song').addEventListener('click', async () => {
         errorEl.textContent = '❌ URL YouTube không hợp lệ.';
         return;
     }
+    
+    // FIX: Kiểm tra trùng videoID
+    const isDuplicate = currentPlaylist.some(song => song.videoId === videoId);
+    if (isDuplicate) {
+        errorEl.textContent = '⚠️ Video này đã có trong Playlist.';
+        return;
+    }
 
-    // Lấy tiêu đề video
+    // Lấy tiêu đề video (Async)
     const title = await fetchVideoTitle(videoId);
 
     const newSong = {
@@ -318,12 +324,15 @@ document.getElementById('btn-add-song').addEventListener('click', async () => {
         title: title,
     };
 
+    const wasEmpty = currentPlaylist.length === 0;
+    
     currentPlaylist.push(newSong);
     savePlaylist();
     urlInputEl.value = '';
 
-    if (currentPlaylist.length === 1 && player) {
-        playVideoAtIndex(0);
+    // FIX: Nếu là bài đầu tiên, tự động phát
+    if (wasEmpty && player) {
+        playVideoAtIndex(0); 
     }
 });
 
@@ -346,8 +355,9 @@ const renderPlaylist = () => {
             <button data-id="${song.id}">Xóa</button>
         `;
         
+        // Đánh dấu bài đang phát
         if (index === currentTrackIndex) {
-            li.style.borderLeftColor = 'var(--color-primary)'; // Đánh dấu bài đang phát
+            li.classList.add('current-track');
         }
         
         // Click để phát bài này
@@ -365,7 +375,7 @@ const renderPlaylist = () => {
             savePlaylist();
             
             if (index === currentTrackIndex) {
-                 playNextTrack(); // Chuyển bài nếu xóa bài đang phát
+                 playNextTrack(); 
             }
         });
 
@@ -391,8 +401,9 @@ function handleDragStart(e) {
 
 function handleDragEnd() {
     this.classList.remove('dragging');
+    this.classList.remove('drag-over');
     draggingItem = null;
-    savePlaylist(); // Lưu playlist sau khi kéo thả xong
+    savePlaylist();
 }
 
 function handleDragOver(e) {
@@ -412,7 +423,6 @@ function handleDrop(e) {
     this.classList.remove('drag-over');
 
     if (draggingItem && draggingItem !== this) {
-        // Tìm vị trí item bị kéo và item đích
         const draggedId = parseInt(draggingItem.dataset.id);
         const droppedId = parseInt(this.dataset.id);
         
@@ -423,7 +433,7 @@ function handleDrop(e) {
         const [movedItem] = currentPlaylist.splice(draggedIndex, 1);
         currentPlaylist.splice(droppedIndex, 0, movedItem);
 
-        // Cập nhật lại index bài đang phát nếu nó bị di chuyển
+        // Cập nhật lại index bài đang phát
         if (currentTrackIndex === draggedIndex) {
             currentTrackIndex = droppedIndex;
         } else if (currentTrackIndex > draggedIndex && currentTrackIndex <= droppedIndex) {
@@ -432,7 +442,7 @@ function handleDrop(e) {
             currentTrackIndex++;
         }
 
-        renderPlaylist(); // Render lại danh sách
+        renderPlaylist();
     }
 }
 
@@ -447,4 +457,3 @@ const init = () => {
 };
 
 window.onload = init;
-
