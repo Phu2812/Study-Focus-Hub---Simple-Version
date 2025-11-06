@@ -160,14 +160,15 @@ const switchMode = async (autoStartNext = true) => {
                 
                 if (currentMode === 'study') {
                     cycleCount++;
-                    if (cycleCount >= totalCycles) {
-                        // Hoàn thành tất cả chu kỳ, đặt lại
+                    if (cycleCount > totalCycles) {
+                        // Vừa hoàn thành chu kỳ cuối cùng (Total Cycles)
                         currentMode = 'study';
                         timeLeft = timerSettings.study;
                         cycleCount = 0;
                         updateDisplay();
                         return; // KHÔNG tự động chuyển tiếp
-                    } else if (cycleCount % 4 === 0) {
+                    } else if (cycleCount % totalCycles === 0 && totalCycles > 0) {
+                        // Chu kỳ dài (nếu TotalCycles là 4, thì sau lần 4 sẽ là long break. Nếu cycleCount > 4, nó sẽ là 8, 12...)
                         currentMode = 'longBreak';
                         timeLeft = timerSettings.longBreak;
                     } else {
@@ -265,7 +266,7 @@ document.getElementById('btn-reset').addEventListener('click', () => {
 });
 
 // Event cho cài đặt Giờ/Phút và Chu kỳ
-document.querySelectorAll('.settings input').forEach(input => {
+document.querySelectorAll('.settings-group input').forEach(input => { // Đổi từ .settings input sang .settings-group input
     input.addEventListener('change', (e) => {
         if (e.target.id === 'setting-study-hour' || e.target.id === 'setting-study-minute') {
             updateStudyTimeSetting();
@@ -276,7 +277,7 @@ document.querySelectorAll('.settings input').forEach(input => {
             const name = e.target.id.replace('setting-', '');
             timerSettings[name] = parseInt(e.target.value || 1) * 60; 
             
-            if (!isRunning && name === currentMode) {
+            if (!isRunning && currentMode.toLowerCase().includes(name.toLowerCase())) { // Sửa lỗi so sánh mode
                 timeLeft = timerSettings[name];
                 updateDisplay();
             }
@@ -314,12 +315,14 @@ const onPlayerReady = (event) => {
         placeholderEl.style.display = 'none';
     }
     
-    // Đặt icon Play nếu chưa có gì phát
+    // Đặt icon Play mặc định
     playPauseIcon.classList.add('fa-play');
 
-    if (currentPlaylist.length > 0) {
+    // Tải video đầu tiên nếu có playlist và chưa có bài nào được tải
+    if (currentPlaylist.length > 0 && currentTrackIndex === -1) {
         currentTrackIndex = 0;
         player.loadVideoById(currentPlaylist[currentTrackIndex].videoId);
+        renderPlaylist(); // Cần render lại để đánh dấu bài hiện tại
     }
 };
 
@@ -339,9 +342,17 @@ const onPlayerStateChange = (event) => {
 };
 
 const playVideoAtIndex = (index) => {
-    if (currentPlaylist.length === 0 || !player) return; 
+    if (currentPlaylist.length === 0 || !player || !player.loadVideoById) return; 
     currentTrackIndex = index;
-    player.loadVideoById(currentPlaylist[currentTrackIndex].videoId);
+    
+    // FIX QUAN TRỌNG: Sử dụng loadVideoById với tham số autoplay=1 để video tự động chạy
+    player.loadVideoById({
+        videoId: currentPlaylist[currentTrackIndex].videoId,
+        startSeconds: 0,
+        suggestedQuality: 'small',
+        autoplay: 1 
+    }); 
+    
     renderPlaylist(); 
 };
 
@@ -441,13 +452,13 @@ const renderPlaylist = () => {
         
         li.querySelector('span').addEventListener('click', () => {
             if (player) {
-                playVideoAtIndex(index);
+                playVideoAtIndex(index); // Sửa lỗi click không chạy
             }
         });
         
         li.querySelector('button').addEventListener('click', (e) => {
             e.stopPropagation(); 
-            const idToRemove = parseInt(e.target.closest('button').dataset.id); // Sửa lỗi tìm id khi bấm vào icon
+            const idToRemove = parseInt(e.target.closest('button').dataset.id); 
             currentPlaylist = currentPlaylist.filter(s => s.id !== idToRemove);
             savePlaylist();
             
