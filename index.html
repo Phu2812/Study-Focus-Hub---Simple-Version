@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Focus Hub - Simple Version</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://www.youtube.com/iframe_api"></script> 
+</head>
+<body>
+    <header>
+        <h1>🧠 Study Focus Hub</h1>
+        <p>Pomodoro Timer và YouTube Playlist</p>
+    </header>
+
+    <main class="container">
+        <section id="timer-section" class="card timer-card">
+            <h2 id="timer-mode">TẬP TRUNG HỌC</h2>
+            <div id="countdown" class="countdown">25:00</div>
+            <div class="controls">
+                <button id="btn-start-pause" class="btn-primary">▶ Bắt Đầu</button>
+                <button id="btn-reset" class="btn-secondary">🔄 Đặt Lại</button>
+            </div>
+            <p id="cycle-info">Chu kỳ: 0 / 4</p>
+
+            <h3>Cài Đặt (Phút)</h3>
+            <div class="settings">
+                <label>Học: <input type="number" id="setting-study" value="25" min="1"></label>
+                <label>Nghỉ Ngắn: <input type="number" id="setting-shortBreak" value="5" min="1"></label>
+                <label>Nghỉ Dài: <input type="number" id="setting-longBreak" value="15" min="1"></label>
+            </div>
+        </section>
+
+        <section id="player-section" class="card player-card">
+            <h2>🎵 YouTube Player</h2>
+            <div id="youtube-player" class="player-embed">
+                <div class="placeholder">Vui lòng thêm bài hát vào Playlist</div>
+            </div>
+            <div class="player-controls">
+                <button id="btn-prev">⏮ Bài Trước</button>
+                <button id="btn-play-pause">⏯ Tạm Dừng/Phát</button>
+                <button id="btn-next">⏭ Bài Tiếp</button>
+            </div>
+        </section>
+
+        <section id="playlist-section" class="card playlist-card">
+            <h2>🎧 Quản Lý Playlist</h2>
+            <div class="input-group">
+                <input type="text" id="youtube-url" placeholder="Dán link YouTube (URL) vào đây...">
+                <button id="btn-add-song" class="btn-primary">Thêm</button>
+            </div>
+            <p id="playlist-error" class="error-message"></p>
+            <ul id="playlist-list" class="playlist-list">
+                </ul>
+        </section>
+    </main>
+    
+    <audio id="alarm-sound" src="sounds/alarm.mp3"></audio> 
+    
+    <script src="app.js"></script>
+</body>
+</html>
