@@ -38,9 +38,13 @@ const skipBtn = document.getElementById('btn-skip');
 const alarmSound = document.getElementById('alarm-sound');
 const timerCardEl = document.getElementById('timer-section');
 
-// Modal Elements
-const restoreModalEl = document.getElementById('restore-modal');
-const modalCloseBtn = document.querySelector('.modal-close');
+// Modal Elements (Đã Tách Biệt)
+const videoRestoreModalEl = document.getElementById('video-restore-modal');
+const timerRestoreModalEl = document.getElementById('timer-restore-modal');
+
+const videoCloseBtn = document.querySelector('.modal-close-video');
+const timerCloseBtn = document.querySelector('.modal-close-timer');
+
 const timerRestoreInfoEl = document.getElementById('timer-restore-info');
 const videoRestoreInfoEl = document.getElementById('video-restore-info');
 const btnRestoreTimer = document.getElementById('btn-restore-timer');
@@ -126,9 +130,10 @@ const loadSession = () => {
     return false;
 };
 
-// Hàm đóng modal và xóa session, và reset trạng thái ứng dụng
-const closeModalAndClearSession = () => {
-    restoreModalEl.style.display = 'none';
+// Hàm đóng tất cả modal và xóa session, và reset trạng thái ứng dụng
+const closeAllModalsAndClearSession = () => {
+    videoRestoreModalEl.style.display = 'none';
+    timerRestoreModalEl.style.display = 'none';
     localStorage.removeItem(SESSION_KEY);
     pendingRestore = null;
     
@@ -137,7 +142,7 @@ const closeModalAndClearSession = () => {
         initDefaultState();
     }
     // Nếu chưa có video nào được chọn để play, cue video đầu tiên (nếu có)
-    if (currentPlaylist.length > 0 && currentTrackIndex === -1) {
+    if (currentPlaylist.length > 0 && currentTrackIndex === -1 && player) {
         currentTrackIndex = 0;
         player.cueVideoById(currentPlaylist[currentTrackIndex].videoId);
         renderPlaylist();
@@ -160,15 +165,11 @@ const initDefaultState = () => {
 
 
 // -----------------------------------------------------------------
-// Logic hiển thị tuần tự (Video -> Timer)
+// Logic hiển thị tuần tự (Video -> Timer) - Dùng 2 Modal Độc lập
 // -----------------------------------------------------------------
 
 const showRestoreModal = () => {
     if (!pendingRestore) return;
-
-    // Ẩn cả hai phần ban đầu
-    document.getElementById('modal-timer-section').style.display = 'none';
-    document.getElementById('modal-video-section').style.display = 'none';
 
     // Bắt đầu với Phase Khôi phục Video
     showVideoRestorePhase();
@@ -181,44 +182,40 @@ const showVideoRestorePhase = () => {
     const currentVideo = currentPlaylist[savedIndex];
     const hasVideoData = currentVideo && savedIndex !== -1;
 
-    // 1. Chuẩn bị Timer Info (để hiển thị trong Modal)
+    // Chuẩn bị Timer Info để hiển thị trong Modal Timer (cho bước sau)
     const timeFormatted = formatTime(savedTime);
     const modeName = savedMode === 'study' ? 'TẬP TRUNG HỌC' : 
                      (savedMode === 'shortBreak' ? 'NGHỈ NGẮN' : 'NGHỈ DÀI');
     timerRestoreInfoEl.innerHTML = `Chế độ: <strong>${modeName}</strong><br>Thời gian còn lại: <strong>${timeFormatted}</strong><br>Chu kỳ đã hoàn thành: <strong>${savedCycles}</strong>`;
 
     if (hasVideoData) {
-        // 2. Hiển thị Phase Video
+        // 1. Hiển thị Modal Video
         const vTimeFormatted = formatTime(savedVTime);
         videoRestoreInfoEl.innerHTML = `Video: <strong>${currentVideo.title}</strong><br>Tiếp tục tại: <strong>${vTimeFormatted}</strong>`;
         
-        document.getElementById('modal-video-section').style.display = 'block';
-        document.getElementById('modal-timer-section').style.display = 'none'; // Đảm bảo Timer ẩn
         btnRestoreVideo.dataset.time = savedVTime;
         btnRestoreVideo.dataset.index = savedIndex;
         btnRestoreVideo.dataset.play = pendingRestore.player.wasPlaying; 
         
-        restoreModalEl.style.display = 'flex';
+        videoRestoreModalEl.style.display = 'flex';
+        timerRestoreModalEl.style.display = 'none'; // Đảm bảo Modal Timer đóng
     } else {
-        // 3. Nếu không có video, chuyển thẳng sang Phase Timer
+        // 2. Nếu không có video, chuyển thẳng sang Modal Timer
         showTimerRestorePhase();
     }
 };
 
 const showTimerRestorePhase = () => {
-    // Ẩn Phase Video 
-    document.getElementById('modal-video-section').style.display = 'none';
-
     // Lấy dữ liệu Timer
     const { timeLeft: savedTime } = pendingRestore.timer;
 
     if (savedTime > 0) {
-        // Hiển thị Phase Timer
-        document.getElementById('modal-timer-section').style.display = 'block';
-        restoreModalEl.style.display = 'flex'; // Đảm bảo modal hiển thị
+        // Hiển thị Modal Timer
+        timerRestoreModalEl.style.display = 'flex';
+        videoRestoreModalEl.style.display = 'none'; // Đảm bảo Modal Video đóng
     } else {
         // Hết dữ liệu để khôi phục (Video đã xong/skip, Timer = 0)
-        closeModalAndClearSession();
+        closeAllModalsAndClearSession();
     }
 };
 
@@ -699,7 +696,7 @@ function handleDrop(e) {
 
 
 // =======================================================
-//                   INIT & MODAL EVENTS (SEQUENTIAL)
+//                   INIT & MODAL EVENTS (2 MODALS)
 // =======================================================
 
 const init = () => {
@@ -708,40 +705,38 @@ const init = () => {
     renderPlaylist();
     updateDisplay();
     
+    // Yêu cầu quyền truy cập Notification nếu chưa có
+    if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+        Notification.requestPermission();
+    }
+    
     if (loadSession()) {
         showRestoreModal();
     }
 };
 
-// FIX CRITICAL: Bấm X = Skip bước hiện tại
-modalCloseBtn.onclick = () => { 
-    // Lấy trạng thái hiển thị hiện tại
-    const isVideoPhase = document.getElementById('modal-video-section').style.display !== 'none';
-    const isTimerPhase = document.getElementById('modal-timer-section').style.display !== 'none';
-    
-    // Nếu Phase Video đang hiển thị, X = Bỏ qua Video (chuyển sang Timer)
-    if (isVideoPhase) {
-        btnSkipVideo.onclick();
-    } 
-    // Nếu Phase Timer đang hiển thị, X = Bỏ qua Timer (kết thúc khôi phục)
-    else if (isTimerPhase) {
-        btnSkipTimer.onclick();
-    }
-    // Trường hợp khác, đóng modal (không nên xảy ra)
-    else {
-        restoreModalEl.style.display = 'none';
-    }
+// --- FIX LỖI X VÀ CLICK NGOÀI ---
+
+// 1. Dấu X Modal Video = Bỏ qua Video -> Chuyển sang Timer
+videoCloseBtn.onclick = () => { 
+    btnSkipVideo.onclick();
 }; 
 
-// FIX CRITICAL: Click ra ngoài không làm gì (chỉ đóng khi click chính xác vào nút X)
+// 2. Dấu X Modal Timer = Bỏ qua Timer -> Đóng và clear session
+timerCloseBtn.onclick = () => { 
+    btnSkipTimer.onclick();
+}; 
+
+// 3. Click ra ngoài: KHÔNG LÀM GÌ. (Bỏ qua xử lý window.onclick)
 window.onclick = (event) => {
-    // Không làm gì nếu event.target là restoreModalEl (nền overlay)
-    // Nếu muốn đóng khi click X, sử dụng modalCloseBtn.onclick (đã fix ở trên)
-    // Nếu event.target là restoreModalEl, không thực hiện hành động gì theo yêu cầu
+    // Chỉ đóng modal khi click chính xác vào nút X, không đóng khi click vào nền overlay
+    // Logic này được để trống theo yêu cầu: click ra ngoài không thực hiện hành động gì
 };
 
 
-// 1. Event Khôi phục Video (PHASE 1)
+// --- XỬ LÝ NÚT BẤM (Tuần tự) ---
+
+// 1. Event Khôi phục Video (Modal Video)
 btnRestoreVideo.onclick = (e) => {
     const startTime = parseInt(e.target.dataset.time);
     const index = parseInt(e.target.dataset.index);
@@ -752,10 +747,12 @@ btnRestoreVideo.onclick = (e) => {
         playVideoAtIndex(index, wasPlaying, startTime);
     }
     
-    showTimerRestorePhase(); // Chuyển sang Phase 2 (Timer)
+    // Đóng Modal Video và chuyển sang hỏi Timer
+    videoRestoreModalEl.style.display = 'none';
+    showTimerRestorePhase(); 
 };
 
-// 2. Event Bỏ qua Video (PHASE 1)
+// 2. Event Bỏ qua Video (Modal Video)
 btnSkipVideo.onclick = () => {
     // Nếu có playlist, load video đầu tiên (hoặc hiện tại) nhưng không play, từ đầu.
     if (currentPlaylist.length > 0) {
@@ -763,10 +760,12 @@ btnSkipVideo.onclick = () => {
         playVideoAtIndex(currentTrackIndex, false, 0); // Load video từ đầu, không play
     }
     
-    showTimerRestorePhase(); // Chuyển sang Phase 2 (Timer)
+    // Đóng Modal Video và chuyển sang hỏi Timer
+    videoRestoreModalEl.style.display = 'none';
+    showTimerRestorePhase(); 
 };
 
-// 3. Event Khôi phục Timer (PHASE 2)
+// 3. Event Khôi phục Timer (Modal Timer)
 btnRestoreTimer.onclick = () => {
     const { timer } = pendingRestore;
     currentMode = timer.currentMode;
@@ -780,15 +779,15 @@ btnRestoreTimer.onclick = () => {
         startTimer();
     }
     
-    closeModalAndClearSession(); // Hoàn thành tất cả
+    closeAllModalsAndClearSession(); // Hoàn thành tất cả và đóng Modal
 };
 
-// 4. Event Bỏ qua Timer (PHASE 2)
+// 4. Event Bỏ qua Timer (Modal Timer)
 btnSkipTimer.onclick = () => {
     // Reset timer về trạng thái mặc định (Study 25:00, cycle 0)
     initDefaultState(); 
 
-    closeModalAndClearSession(); // Hoàn thành tất cả
+    closeAllModalsAndClearSession(); // Hoàn thành tất cả và đóng Modal
 };
 
 
