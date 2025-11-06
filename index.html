@@ -20,24 +20,40 @@
             <h2 id="timer-mode" class="study-mode">TẬP TRUNG HỌC</h2>
             <div id="countdown" class="countdown">25:00</div>
             <p id="cycle-info">Chu kỳ: 0 / 4</p>
+            
             <div class="controls">
-                <button id="btn-start-pause" class="btn-primary">▶ Bắt Đầu</button>
-                <button id="btn-reset" class="btn-secondary">🔄 Đặt Lại</button>
-                <button id="btn-skip" class="btn-secondary">⏭ Chuyển Tiếp</button> 
+                <div class="controls-row-1">
+                    <button id="btn-start-pause" class="btn-primary">▶ Bắt Đầu</button>
+                    <button id="btn-reset" class="btn-secondary">🔄 Đặt Lại</button>
+                </div>
+                <div class="controls-row-2">
+                    <button id="btn-skip" class="btn-secondary">⏭ Chuyển Tiếp</button> 
+                </div>
             </div>
 
             <h3>Cài Đặt</h3>
-            <div class="settings">
-                <label>Tổng chu kỳ: <input type="number" id="setting-total-cycles" value="4" min="1"></label>
+            
+            <div class="settings-group" id="group-cycles">
+                <h4>Tổng chu kỳ</h4>
+                <div class="settings-row">
+                    <label>Tổng chu kỳ: <input type="number" id="setting-total-cycles" value="4" min="1"></label>
+                </div>
             </div>
 
-            <div class="settings time-settings">
-                <label>Học (Giờ): <input type="number" id="setting-study-hour" value="0" min="0"></label>
-                <label>Học (Phút): <input type="number" id="setting-study-minute" value="25" min="1" max="59"></label>
+            <div class="settings-group" id="group-study">
+                <h4>Thời gian TẬP TRUNG</h4>
+                <div class="settings-row time-settings">
+                    <label>Học (Giờ): <input type="number" id="setting-study-hour" value="0" min="0"></label>
+                    <label>Học (Phút): <input type="number" id="setting-study-minute" value="25" min="1" max="59"></label>
+                </div>
             </div>
-            <div class="settings time-settings">
-                <label>Nghỉ Ngắn: <input type="number" id="setting-shortBreak" value="5" min="1"></label>
-                <label>Nghỉ Dài: <input type="number" id="setting-longBreak" value="15" min="1"></label>
+            
+            <div class="settings-group" id="group-break">
+                <h4>Thời gian NGHỈ</h4>
+                <div class="settings-row time-settings">
+                    <label>Nghỉ Ngắn: <input type="number" id="setting-shortBreak" value="5" min="1"></label>
+                    <label>Nghỉ Dài: <input type="number" id="setting-longBreak" value="15" min="1"></label>
+                </div>
             </div>
         </section>
 
