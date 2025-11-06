@@ -3,7 +3,7 @@
 // =======================================================
 
 const STORAGE_KEY = 'study_playlist_simple';
-const YOUTUBE_OEMBED_API = 'https://www.youtube.com/oembed?url='; // API công khai mới
+const YOUTUBE_OEMBED_API = 'https://www.youtube.com/oembed?url='; // ĐÃ FIX: API công khai để lấy tiêu đề
 const ALARM_FADE_DURATION = 1000; // 1 giây
 
 let player; 
@@ -44,7 +44,7 @@ const getYouTubeVideoId = (url) => {
     return match ? match[1] : null;
 };
 
-// Lấy tiêu đề video từ YouTube oEmbed API
+// ĐÃ FIX: Lấy tiêu đề video từ YouTube oEmbed API
 const fetchVideoTitle = async (videoId) => {
     const url = `https://www.youtube.com/watch?v=${videoId}`;
     try {
@@ -89,7 +89,6 @@ const updateDisplay = () => {
 
 // Hiệu ứng Fade In/Out cho âm thanh cảnh báo
 const fadeAlarm = (isFadeIn, callback) => {
-    // Đặt lại âm lượng trước khi fade
     alarmSound.volume = isFadeIn ? 0 : 1;
     
     if (isFadeIn) {
@@ -238,9 +237,14 @@ window.onYouTubeIframeAPIReady = () => {
     });
 };
 
+// ĐÃ FIX: Truy cập placeholder bằng ID mới an toàn hơn
 const onPlayerReady = (event) => {
     console.log("YouTube Player đã sẵn sàng.");
-    document.querySelector('.placeholder').style.display = 'none';
+    
+    const placeholderEl = document.getElementById('player-placeholder');
+    if (placeholderEl) {
+        placeholderEl.style.display = 'none';
+    }
 
     if (currentPlaylist.length > 0) {
         currentTrackIndex = 0;
