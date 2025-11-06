@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Study Focus Hub - Simple Version</title>
+    <title>Study Focus Hub | Pomodoro & Playlist</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://www.youtube.com/iframe_api"></script> 
+    <link rel="icon" type="image/x-icon" href="favicon.ico"> 
 </head>
 <body>
     <header>
@@ -15,13 +16,13 @@
 
     <main class="container">
         <section id="timer-section" class="card timer-card">
-            <h2 id="timer-mode">TẬP TRUNG HỌC</h2>
+            <h2 id="timer-mode" class="study-mode">TẬP TRUNG HỌC</h2>
             <div id="countdown" class="countdown">25:00</div>
+            <p id="cycle-info">Chu kỳ: 0 / 4</p>
             <div class="controls">
                 <button id="btn-start-pause" class="btn-primary">▶ Bắt Đầu</button>
                 <button id="btn-reset" class="btn-secondary">🔄 Đặt Lại</button>
             </div>
-            <p id="cycle-info">Chu kỳ: 0 / 4</p>
 
             <h3>Cài Đặt (Phút)</h3>
             <div class="settings">
@@ -44,7 +45,7 @@
         </section>
 
         <section id="playlist-section" class="card playlist-card">
-            <h2>🎧 Quản Lý Playlist</h2>
+            <h2>🎧 Quản Lý Playlist (Kéo & Thả)</h2>
             <div class="input-group">
                 <input type="text" id="youtube-url" placeholder="Dán link YouTube (URL) vào đây...">
                 <button id="btn-add-song" class="btn-primary">Thêm</button>
