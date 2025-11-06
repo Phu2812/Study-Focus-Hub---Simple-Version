@@ -3,7 +3,7 @@
 // =======================================================
 
 const STORAGE_KEY = 'study_playlist_simple';
-const TEMP_TITLE_API = 'https://noembed.com/embed?url='; // API công khai để lấy tiêu đề
+const YOUTUBE_OEMBED_API = 'https://www.youtube.com/oembed?url='; // API mới
 const ALARM_FADE_DURATION = 1000; // 1 giây
 
 let player; 
@@ -48,7 +48,8 @@ const getYouTubeVideoId = (url) => {
 const fetchVideoTitle = async (videoId) => {
     const url = `https://www.youtube.com/watch?v=${videoId}`;
     try {
-        const response = await fetch(`${TEMP_TITLE_API}${encodeURIComponent(url)}`);
+        // Sử dụng oembed.com của YouTube
+        const response = await fetch(`${YOUTUBE_OEMBED_API}${encodeURIComponent(url)}&format=json`);
         const data = await response.json();
         return data.title || `Video ${videoId}`;
     } catch (error) {
@@ -446,3 +447,4 @@ const init = () => {
 };
 
 window.onload = init;
+
