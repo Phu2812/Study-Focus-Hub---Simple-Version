@@ -24,46 +24,25 @@
             <div class="controls">
                 <div class="controls-row-1">
                     <button id="btn-start-pause" class="btn-primary">▶ Bắt Đầu</button>
-                    <button id="btn-reset" class="btn-secondary">♻ Reset</button>
-                    <button id="btn-skip" class="btn-secondary">» Bỏ qua</button>
+                    <button id="btn-reset" class="btn-secondary"><i class="fas fa-redo"></i> Reset</button>
+                    <button id="btn-skip" class="btn-secondary"><i class="fas fa-forward"></i> Bỏ qua</button>
                 </div>
             </div>
 
-            <div id="settings-area">
-                <h3>🛠️ Cài Đặt</h3>
-
-                <div id="group-cycles" class="settings-group">
-                    <h4>Tổng chu kỳ</h4>
-                    <div class="settings-row">
-                        <label for="setting-total-cycles">
-                            <input type="number" id="setting-total-cycles" value="4" min="1" max="100">
-                        </label>
-                    </div>
-                </div>
-
-                <div id="group-study" class="settings-group">
-                    <h4>Thời gian TẬP TRUNG</h4>
-                    <div class="settings-row time-settings">
-                        <label for="setting-study-hour">Giờ
-                            <input type="number" id="setting-study-hour" value="0" min="0" max="10">
-                        </label>
-                        <label for="setting-study-minute">Phút
-                            <input type="number" id="setting-study-minute" value="25" min="1" max="59">
-                        </label>
-                    </div>
-                </div>
-
-                <div id="group-break" class="settings-group">
-                    <h4>Thời gian NGHỈ</h4>
-                    <div class="settings-row">
-                        <label for="setting-shortBreak">Ngắn (Phút)
-                            <input type="number" id="setting-shortBreak" value="5" min="1" max="30">
-                        </label>
-                        <label for="setting-longBreak">Dài (Phút)
-                            <input type="number" id="setting-longBreak" value="15" min="1" max="60">
-                        </label>
-                    </div>
-                </div>
+            <div class="settings-group">
+                <h3>Cài đặt thời gian</h3>
+                <label for="setting-study-hour">Giờ học:</label>
+                <input type="number" id="setting-study-hour" value="0" min="0" max="5">
+                <label for="setting-study-minute">Phút học:</label>
+                <input type="number" id="setting-study-minute" value="25" min="1" max="59">
+            </div>
+            <div class="settings-group">
+                <label for="setting-short-break">Nghỉ ngắn (phút):</label>
+                <input type="number" id="setting-short-break" value="5" min="1" max="30">
+                <label for="setting-long-break">Nghỉ dài (phút):</label>
+                <input type="number" id="setting-long-break" value="15" min="1" max="60">
+                <label for="setting-total-cycles">Tổng chu kỳ:</label>
+                <input type="number" id="setting-total-cycles" value="4" min="1" max="12">
             </div>
         </section>
 
@@ -93,31 +72,49 @@
                 </ul>
         </section>
     </main>
-
-    <audio id="alarm-sound" src="alarm.mp3" preload="auto"></audio> 
     
-    <div id="restore-modal" class="modal-overlay">
+    <div id="video-restore-modal" class="modal">
         <div class="modal-content">
-            <span class="modal-close">&times;</span>
-            <h2 id="modal-title"><i class="fas fa-history"></i> Khôi Phục Phiên Làm Việc</h2>
-            
-            <div id="modal-timer-section" class="modal-section">
-                <h3>Phiên Pomodoro Cũ</h3>
-                <p id="timer-restore-info" class="modal-info"></p>
-                <button id="btn-restore-timer" class="btn-primary">✅ Tiếp Tục Timer Cũ</button>
-                <button id="btn-skip-timer" class="btn-secondary">❌ Bắt Đầu Lại</button>
+            <span class="modal-close-video">&times;</span>
+            <h3 class="modal-title">Khôi phục Video?</h3>
+            <p>Phát hiện phiên học dang dở!</p>
+            <div class="restore-info-box">
+                <i class="fas fa-video"></i>
+                <div id="video-restore-info"></div>
             </div>
-
-            <div id="modal-video-section" class="modal-section" style="margin-top: 20px;">
-                <h3>Video Gần Nhất</h3>
-                <p id="video-restore-info" class="modal-info"></p>
-                <button id="btn-restore-video" class="btn-primary">🎧 Tiếp Tục Video Cũ</button>
-                <button id="btn-skip-video" class="btn-secondary">▶ Phát Bài Mới</button>
+            <div class="modal-actions">
+                <button id="btn-restore-video" class="btn-primary">
+                    <i class="fas fa-play"></i> Tiếp tục Video cũ
+                </button>
+                <button id="btn-skip-video" class="btn-secondary">
+                    <i class="fas fa-forward"></i> Bỏ qua Video
+                </button>
             </div>
-
-            <p class="modal-note">Lưu ý: Nếu bỏ qua Timer, bạn có thể chọn tiếp tục video.</p>
         </div>
     </div>
+
+    <div id="timer-restore-modal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close-timer">&times;</span>
+            <h3 class="modal-title">Khôi phục Timer?</h3>
+            <p>Phát hiện thời gian Pomodoro dang dở!</p>
+            <div class="restore-info-box">
+                <i class="fas fa-clock"></i>
+                <div id="timer-restore-info"></div>
+            </div>
+            <div class="modal-actions">
+                <button id="btn-restore-timer" class="btn-primary">
+                    <i class="fas fa-clock"></i> Tiếp tục Timer cũ
+                </button>
+                <button id="btn-skip-timer" class="btn-secondary">
+                    <i class="fas fa-redo"></i> Bắt đầu Timer mới
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <audio id="alarm-sound" src="https://assets.mixkit.co/sfx/download/mixkit-analog-clock-chime-3806.wav" preload="auto"></audio>
+    
     <script src="app.js"></script>
 </body>
 </html>
