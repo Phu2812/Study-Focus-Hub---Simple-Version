@@ -32,7 +32,7 @@ const timerDisplayEl = document.getElementById('countdown');
 const timerModeEl = document.getElementById('timer-mode');
 const cycleInfoEl = document.getElementById('cycle-info');
 const startPauseBtn = document.getElementById('btn-start-pause');
-const skipBtn = document.getElementById('btn-skip'); // Nút mới
+const skipBtn = document.getElementById('btn-skip'); 
 const alarmSound = document.getElementById('alarm-sound');
 const timerCardEl = document.getElementById('timer-section');
 
@@ -53,6 +53,8 @@ const getYouTubeVideoId = (url) => {
 const fetchVideoTitle = async (videoId) => {
     const url = `https://www.youtube.com/watch?v=${videoId}`;
     try {
+        // Sử dụng một proxy để tránh lỗi CORS khi gọi trực tiếp API Oembed
+        // Lưu ý: Nếu môi trường chạy chặn gọi bên ngoài, phần này vẫn có thể lỗi.
         const response = await fetch(`${YOUTUBE_OEMBED_API}${encodeURIComponent(url)}&format=json`);
         const data = await response.json();
         return data.title || `Video ${videoId}`;
@@ -91,13 +93,14 @@ const updateDisplay = () => {
     timerCardEl.style.backgroundColor = currentMode === 'study' ? 'rgba(255, 99, 71, 0.1)' : 'rgba(60, 179, 113, 0.1)';
     
     // Cập nhật chu kỳ hiện tại / tổng chu kỳ
-    const currentCycle = cycleCount % timerSettings.totalCycles;
-    cycleInfoEl.textContent = `Chu kỳ: ${currentCycle === 0 ? timerSettings.totalCycles : currentCycle} / ${timerSettings.totalCycles}`;
+    const totalCycles = parseInt(document.getElementById('setting-total-cycles').value || 4);
+    timerSettings.totalCycles = totalCycles;
+    const currentCycle = cycleCount % totalCycles;
+    cycleInfoEl.textContent = `Chu kỳ: ${currentCycle === 0 ? totalCycles : currentCycle} / ${totalCycles}`;
     
     document.title = `${formatTime(timeLeft)} - ${timerModeEl.textContent}`;
 };
 
-// Hiệu ứng Fade In/Out cho âm thanh cảnh báo
 const fadeAlarm = (isFadeIn, callback) => {
     alarmSound.volume = isFadeIn ? 0 : 1;
     
@@ -161,14 +164,12 @@ const switchMode = async (autoStartNext = true) => {
                 if (currentMode === 'study') {
                     cycleCount++;
                     if (cycleCount > totalCycles) {
-                        // Vừa hoàn thành chu kỳ cuối cùng (Total Cycles)
                         currentMode = 'study';
                         timeLeft = timerSettings.study;
                         cycleCount = 0;
                         updateDisplay();
-                        return; // KHÔNG tự động chuyển tiếp
+                        return; 
                     } else if (cycleCount % totalCycles === 0 && totalCycles > 0) {
-                        // Chu kỳ dài (nếu TotalCycles là 4, thì sau lần 4 sẽ là long break. Nếu cycleCount > 4, nó sẽ là 8, 12...)
                         currentMode = 'longBreak';
                         timeLeft = timerSettings.longBreak;
                     } else {
@@ -207,7 +208,7 @@ const startTimer = () => {
     intervalId = setInterval(() => {
         timeLeft--;
         if (timeLeft <= 0) {
-            switchMode(true); // Tự động chuyển và tự động bắt đầu
+            switchMode(true); 
         } else {
             updateDisplay();
         }
@@ -219,8 +220,8 @@ const updateStudyTimeSetting = () => {
     const hours = parseInt(document.getElementById('setting-study-hour').value || 0);
     const minutes = parseInt(document.getElementById('setting-study-minute').value || 0);
     
-    // Đảm bảo tối thiểu là 1 phút
     const totalSeconds = (hours * 3600) + (minutes * 60);
+    // Đảm bảo tối thiểu là 1 phút nếu người dùng không nhập gì
     timerSettings.study = Math.max(60, totalSeconds); 
     
     if (!isRunning && currentMode === 'study') {
@@ -249,7 +250,6 @@ startPauseBtn.addEventListener('click', () => {
 
 skipBtn.addEventListener('click', () => {
     if (isRunning || timeLeft > 0) {
-        // Chuyển tiếp ngay lập tức, và tự động bắt đầu chế độ tiếp theo
         switchMode(true); 
     }
 });
@@ -259,14 +259,14 @@ document.getElementById('btn-reset').addEventListener('click', () => {
     clearInterval(intervalId);
     isRunning = false;
     currentMode = 'study';
-    updateStudyTimeSetting(); // Lấy lại giá trị ban đầu (bao gồm Giờ/Phút)
+    updateStudyTimeSetting(); 
     cycleCount = 0;
     startPauseBtn.textContent = '▶ Bắt Đầu';
     updateDisplay();
 });
 
 // Event cho cài đặt Giờ/Phút và Chu kỳ
-document.querySelectorAll('.settings-group input').forEach(input => { // Đổi từ .settings input sang .settings-group input
+document.querySelectorAll('.settings-group input').forEach(input => { 
     input.addEventListener('change', (e) => {
         if (e.target.id === 'setting-study-hour' || e.target.id === 'setting-study-minute') {
             updateStudyTimeSetting();
@@ -277,7 +277,7 @@ document.querySelectorAll('.settings-group input').forEach(input => { // Đổi 
             const name = e.target.id.replace('setting-', '');
             timerSettings[name] = parseInt(e.target.value || 1) * 60; 
             
-            if (!isRunning && currentMode.toLowerCase().includes(name.toLowerCase())) { // Sửa lỗi so sánh mode
+            if (!isRunning && currentMode.toLowerCase().includes(name.toLowerCase())) { 
                 timeLeft = timerSettings[name];
                 updateDisplay();
             }
@@ -299,7 +299,7 @@ window.onYouTubeIframeAPIReady = () => {
     player = new YT.Player('youtube-player', {
         height: '100%',
         width: '100%',
-        playerVars: { 'controls': 1, 'autoplay': 1, 'modestbranding': 1 },
+        playerVars: { 'controls': 1, 'autoplay': 0, 'modestbranding': 1 },
         events: {
             'onReady': onPlayerReady,
             'onStateChange': onPlayerStateChange
@@ -315,14 +315,13 @@ const onPlayerReady = (event) => {
         placeholderEl.style.display = 'none';
     }
     
-    // Đặt icon Play mặc định
     playPauseIcon.classList.add('fa-play');
 
-    // Tải video đầu tiên nếu có playlist và chưa có bài nào được tải
     if (currentPlaylist.length > 0 && currentTrackIndex === -1) {
         currentTrackIndex = 0;
-        player.loadVideoById(currentPlaylist[currentTrackIndex].videoId);
-        renderPlaylist(); // Cần render lại để đánh dấu bài hiện tại
+        // Sử dụng cueVideoById để tải video mà không cố gắng phát (tránh lỗi)
+        player.cueVideoById(currentPlaylist[currentTrackIndex].videoId); 
+        renderPlaylist(); 
     }
 };
 
@@ -341,17 +340,27 @@ const onPlayerStateChange = (event) => {
     }
 };
 
-const playVideoAtIndex = (index) => {
+// FIX LỖI PLAY KHÔNG CHẠY KHI CLICK
+const playVideoAtIndex = (index, forcePlay = true) => {
     if (currentPlaylist.length === 0 || !player || !player.loadVideoById) return; 
-    currentTrackIndex = index;
     
-    // FIX QUAN TRỌNG: Sử dụng loadVideoById với tham số autoplay=1 để video tự động chạy
+    const videoId = currentPlaylist[index].videoId;
+    currentTrackIndex = index;
+
     player.loadVideoById({
-        videoId: currentPlaylist[currentTrackIndex].videoId,
+        videoId: videoId,
         startSeconds: 0,
         suggestedQuality: 'small',
-        autoplay: 1 
+        autoplay: 0 
     }); 
+    
+    if (forcePlay) {
+         // Thử gọi playVideo() sau một khoảng trễ ngắn để đảm bảo video đã được tải 
+         // và cố gắng vượt qua cơ chế chặn autoplay của trình duyệt.
+         setTimeout(() => {
+             player.playVideo().catch(e => console.error("Lỗi khi cố gắng play video:", e)); 
+         }, 500);
+    }
     
     renderPlaylist(); 
 };
@@ -373,13 +382,10 @@ const togglePlayback = () => {
     const state = player.getPlayerState();
     if (state === 1) {
         player.pauseVideo();
-        playPauseIcon.classList.remove('fa-pause');
-        playPauseIcon.classList.add('fa-play');
     } else if (state === 2 || state === 5) {
         player.playVideo();
-        playPauseIcon.classList.remove('fa-play');
-        playPauseIcon.classList.add('fa-pause');
     } else if (state === -1 && currentPlaylist.length > 0) {
+        // Nếu player chưa load gì (state -1) và có playlist, thì load video đầu tiên (hoặc video hiện tại)
         playVideoAtIndex(currentTrackIndex !== -1 ? currentTrackIndex : 0);
     }
 };
@@ -424,9 +430,11 @@ document.getElementById('btn-add-song').addEventListener('click', async () => {
     urlInputEl.value = '';
 
     if (wasEmpty && player) {
+        // Tự động play khi thêm bài đầu tiên
         playVideoAtIndex(0); 
     }
 });
+
 
 const renderPlaylist = () => {
     playlistListEl.innerHTML = ''; 
@@ -450,9 +458,10 @@ const renderPlaylist = () => {
             li.classList.add('current-track');
         }
         
+        // SỬA LỖI CLICK: Gọi hàm playVideoAtIndex
         li.querySelector('span').addEventListener('click', () => {
             if (player) {
-                playVideoAtIndex(index); // Sửa lỗi click không chạy
+                playVideoAtIndex(index, true); 
             }
         });
         
@@ -538,7 +547,7 @@ function handleDrop(e) {
 
 const init = () => {
     loadPlaylist();
-    updateStudyTimeSetting(); // Tính toán thời gian học ban đầu
+    updateStudyTimeSetting(); 
     renderPlaylist();
     updateDisplay();
 };
