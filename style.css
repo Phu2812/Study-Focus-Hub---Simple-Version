@@ -109,37 +109,39 @@ header h1 {
 
 
 /* ======================================================= */
-/* FIX: Bố cục Cài Đặt (Settings) - Sử dụng nhóm rõ ràng */
+/* FIX: Bố cục Cài Đặt (Settings) - Tối ưu Flexbox */
 /* ======================================================= */
 
 /* Tiêu đề chính của khối Cài Đặt */
 .timer-card h3 {
     text-align: center; 
     margin-top: 25px; 
-    margin-bottom: 0px; /* Bỏ margin bottom */
+    margin-bottom: 0;
     padding-top: 15px;
     border-top: 1px solid #333;
+    font-size: 1.2em;
 }
 
 /* Khối nhóm cài đặt */
 .settings-group {
     padding: 10px 0;
-    border-bottom: 1px solid #282828; /* Đường ngăn cách mỏng giữa các nhóm */
+    border-bottom: 1px solid #282828; 
 }
 
-/* Tiêu đề phụ (Thời gian Tập trung, Thời gian Nghỉ) */
+/* Tiêu đề phụ (Thời gian Tập trung, Thời gian Nghỉ, v.v.) */
 .settings-group h4 {
     font-size: 0.9em;
     font-weight: 600;
-    margin: 0 0 10px 0;
+    margin: 5px 0 10px 0;
     color: var(--color-primary);
+    text-align: center; 
 }
 
 /* Hàng chứa các input */
 .settings-row {
     display: flex;
-    justify-content: center;
-    gap: 20px;
+    justify-content: space-evenly; 
+    gap: 10px;
 }
 
 /* Định dạng chung cho label/input trong Settings */
@@ -150,11 +152,6 @@ header h1 {
     color: #a0a0a0;
     text-align: center; 
     max-width: 100px; 
-}
-
-/* Dành cho các hàng có 2 input (Giờ/Phút, Nghỉ Ngắn/Dài) */
-.settings-row.time-settings {
-    justify-content: space-evenly; /* Căn đều 2 input */
 }
 
 .settings-row input {
@@ -168,25 +165,35 @@ header h1 {
     color: var(--text-light);
 }
 
-/* Đặc biệt cho Total Cycles (Chỉ một input) */
+/* Nhóm Tổng chu kỳ - FIX LỖI CĂN GIỮA */
 #group-cycles .settings-row {
-    display: block; /* Đảm bảo input nằm riêng 1 hàng */
+    justify-content: center; /* Căn giữa hàng */
 }
+/* Ẩn văn bản nhãn "Tổng chu kỳ: " */
+#group-cycles label {
+    font-size: 0;
+    height: 0;
+    overflow: hidden;
+    padding: 0;
+    margin: 0;
+    max-width: 100px; /* Vẫn giữ kích thước để căn lề */
+}
+/* Thiết lập lại cho input để nó căn giữa trong label đã bị ẩn */
 #setting-total-cycles {
-    width: 70px; 
+    display: block; 
     margin: 5px auto; 
+    color: var(--text-light); 
+    font-size: 1em; 
+    width: 70px;
+    /* Đảm bảo thuộc tính CSS không bị thừa kế từ label bị ẩn */
+    height: auto; 
+    padding: 8px;
 }
 
 /* Gỡ bỏ đường ngăn cách cuối cùng */
 #group-break {
     border-bottom: none;
 }
-
-/* Ẩn nhãn (label) "Tổng chu kỳ" bên trong khối cycle group (vì đã có h4) */
-#group-cycles label {
-    display: none; 
-}
-
 /* ======================================================= */
 
 
