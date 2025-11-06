@@ -66,21 +66,39 @@ header h1 {
     letter-spacing: -3px;
 }
 
+/* Sửa lỗi bố cục nút điều khiển */
+.controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px; 
+    margin-bottom: 25px;
+}
+
+.controls-row-1 {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.controls-row-2 {
+    display: flex;
+    justify-content: center;
+}
+
 .controls button {
     padding: 12px 20px; 
     border: none;
     border-radius: 8px;
     cursor: pointer;
     font-weight: bold;
-    margin: 0 5px; 
     transition: background-color 0.2s, transform 0.1s;
     font-size: 1em; 
 }
-.controls button i {
-    pointer-events: none; 
-}
-.controls button:active {
-    transform: scale(0.98);
+
+/* Nút Tạm Dừng/Bắt Đầu lớn hơn một chút để nổi bật */
+#btn-start-pause {
+    flex-basis: 45%; 
+    max-width: 150px;
 }
 
 .btn-primary { background-color: var(--color-primary); color: white; }
@@ -91,47 +109,55 @@ header h1 {
 
 
 /* ======================================================= */
-/* FIX: Bố cục Cài Đặt (Settings) */
+/* FIX: Bố cục Cài Đặt (Settings) - Sử dụng nhóm rõ ràng */
 /* ======================================================= */
 
-/* Căn giữa tiêu đề Cài Đặt */
+/* Tiêu đề chính của khối Cài Đặt */
 .timer-card h3 {
     text-align: center; 
     margin-top: 25px; 
-    margin-bottom: 5px;
-}
-
-.settings {
-    display: flex;
-    justify-content: space-evenly; 
-    gap: 10px;
-    margin-top: 15px; 
+    margin-bottom: 0px; /* Bỏ margin bottom */
     padding-top: 15px;
     border-top: 1px solid #333;
-    flex-wrap: wrap; 
 }
 
-/* Khối Cài đặt thời gian (Học và Nghỉ) */
-.time-settings {
-    border-top: none; 
-    padding-top: 5px; 
-    margin-top: 0px; 
-    justify-content: space-around; /* Căn đều giữa Giờ/Phút và Nghỉ Ngắn/Dài */
+/* Khối nhóm cài đặt */
+.settings-group {
+    padding: 10px 0;
+    border-bottom: 1px solid #282828; /* Đường ngăn cách mỏng giữa các nhóm */
+}
+
+/* Tiêu đề phụ (Thời gian Tập trung, Thời gian Nghỉ) */
+.settings-group h4 {
+    font-size: 0.9em;
+    font-weight: 600;
+    margin: 0 0 10px 0;
+    color: var(--color-primary);
+}
+
+/* Hàng chứa các input */
+.settings-row {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
 }
 
 /* Định dạng chung cho label/input trong Settings */
-.settings label {
+.settings-row label {
     display: flex;
     flex-direction: column;
     font-size: 0.9em;
     color: #a0a0a0;
     text-align: center; 
-    flex-basis: 40%; 
     max-width: 100px; 
-    margin-bottom: 10px; /* Thêm khoảng cách giữa các hàng setting */
 }
 
-.settings input {
+/* Dành cho các hàng có 2 input (Giờ/Phút, Nghỉ Ngắn/Dài) */
+.settings-row.time-settings {
+    justify-content: space-evenly; /* Căn đều 2 input */
+}
+
+.settings-row input {
     width: 65px; 
     padding: 8px;
     margin-top: 5px;
@@ -142,11 +168,25 @@ header h1 {
     color: var(--text-light);
 }
 
-/* Đặc biệt cho Total Cycles (Chỉ một input, cần căn giữa) */
+/* Đặc biệt cho Total Cycles (Chỉ một input) */
+#group-cycles .settings-row {
+    display: block; /* Đảm bảo input nằm riêng 1 hàng */
+}
 #setting-total-cycles {
     width: 70px; 
     margin: 5px auto; 
 }
+
+/* Gỡ bỏ đường ngăn cách cuối cùng */
+#group-break {
+    border-bottom: none;
+}
+
+/* Ẩn nhãn (label) "Tổng chu kỳ" bên trong khối cycle group (vì đã có h4) */
+#group-cycles label {
+    display: none; 
+}
+
 /* ======================================================= */
 
 
@@ -191,6 +231,10 @@ header h1 {
     font-size: 1.5em; 
     padding: 10px 15px;
 }
+.player-controls button i {
+    pointer-events: none;
+}
+
 
 /* --- Playlist Manager --- */
 .playlist-card {
@@ -301,13 +345,5 @@ header h1 {
     }
     .countdown {
         font-size: 5em;
-    }
-    .settings {
-        flex-direction: row; 
-        justify-content: space-between;
-        padding: 10px 0;
-    }
-    .settings label {
-        flex-basis: 30%;
     }
 }
