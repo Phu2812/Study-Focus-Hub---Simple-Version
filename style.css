@@ -147,6 +147,11 @@ header h1 {
     margin-bottom: 15px;
 }
 
+.controls-row-2 {
+    display: flex;
+    justify-content: center; /* Căn giữa nút Settings */
+}
+
 .btn-primary, .btn-secondary, .btn-icon {
     padding: 10px 20px;
     border: none;
@@ -186,11 +191,21 @@ header h1 {
     padding: 8px 12px;
 }
 
-/* ================== SETTINGS AREA ================== */
+/* CHỈNH SỬA: NÚT CÀI ĐẶT */
+#btn-settings {
+    flex-grow: 0; /* Không cần mở rộng toàn bộ */
+    width: 150px; /* Chiều rộng cố định */
+    background-color: var(--color-secondary);
+    color: var(--text-main);
+    font-weight: 600;
+    font-size: 1em;
+}
+
+/* ================== SETTINGS AREA (ĐÃ CHỈNH SỬA) ================== */
 
 .settings-area {
     margin-top: 30px;
-    padding-top: 20px;
+    padding: 20px 10px 0; /* Bỏ padding 2 bên để căn chỉnh */
     border-top: 1px solid var(--border-color);
     text-align: left;
     display: none; /* Mặc định ẩn */
@@ -200,10 +215,16 @@ header h1 {
     display: block;
 }
 
+.settings-area h3 {
+    text-align: center;
+    margin-bottom: 25px;
+    color: var(--color-primary);
+}
+
 .setting-group {
     display: flex;
     align-items: center;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
     justify-content: space-between;
     padding: 0 10px;
 }
@@ -211,21 +232,40 @@ header h1 {
 .setting-group label {
     font-weight: 500;
     width: 60%;
+    color: var(--text-secondary); /* Màu chữ nhẹ hơn */
+}
+
+/* Container cho Input và đơn vị */
+.input-inline {
+    display: flex;
+    align-items: center;
+    gap: 5px;
 }
 
 .settings-area input {
-    width: 60px;
-    padding: 8px;
+    width: 50px; /* Kích thước nhỏ hơn */
+    padding: 8px 5px;
     border-radius: 4px;
     border: 1px solid var(--border-color);
     background-color: var(--input-bg);
     color: var(--text-main);
     text-align: center;
-    margin-left: 5px;
+    -moz-appearance: textfield; /* Ẩn mũi tên trên Firefox */
 }
 
+/* Ẩn mũi tên lên/xuống trên Chrome/Safari/Edge */
+.settings-area input::-webkit-outer-spin-button,
+.settings-area input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
 
-/* ================== VIDEO & PLAYLIST ================== */
+.input-inline span {
+    font-size: 0.9em;
+    color: var(--text-secondary);
+}
+
+/* ================== VIDEO & PLAYLIST (GIỮ NGUYÊN) ================== */
 
 #youtube-player {
     width: 100%;
@@ -333,7 +373,7 @@ header h1 {
     font-size: 1em;
 }
 
-/* ================== MODAL STYLES ================== */
+/* ================== MODAL STYLES (GIỮ NGUYÊN) ================== */
 
 .modal {
     display: none; /* Mặc định ẩn */
