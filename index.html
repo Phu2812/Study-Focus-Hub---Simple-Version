@@ -20,8 +20,10 @@
         <section id="timer-section" class="card timer-card">
             <h2 id="timer-mode" class="study-mode">TẬP TRUNG HỌC</h2>
             
-            <div class="timer-display-box">
-                <div id="countdown" class="countdown">25:00</div>
+            <div class="progress-circle" id="progress-circle">
+                <div class="timer-display-box">
+                    <div id="countdown" class="countdown">25:00</div>
+                </div>
             </div>
             
             <p id="cycle-info">Chu kỳ: 0 / 4</p>
@@ -29,51 +31,37 @@
             <div class="controls">
                 <div class="controls-row-1">
                     <button id="btn-start-pause" class="btn-primary">▶ Bắt Đầu</button>
-                    <button id="btn-reset" class="btn-secondary"><i class="fas fa-redo"></i> Đặt Lại</button>
-                    <button id="btn-skip" class="btn-secondary"><i class="fas fa-forward"></i> Chuyển Tiếp</button>
+                    <button id="btn-reset" class="btn-secondary">🔄 Đặt Lại</button>
+                    <button id="btn-skip" class="btn-secondary">⏩ Bỏ Qua</button>
                 </div>
             </div>
-
-            <h3 class="settings-title"><i class="fas fa-cog"></i> Cài đặt Thời gian</h3>
-
-            <div class="settings-group">
-                <h4>Thời gian TẬP TRUNG (Study)</h4>
-                <div class="settings-row">
-                    <label for="setting-study-hour">Giờ</label>
-                    <input type="number" id="setting-study-hour" value="0" min="0" max="99">
-                    <label for="setting-study-minute">Phút</label>
-                    <input type="number" id="setting-study-minute" value="25" min="0" max="59">
-                </div>
+            
+            <div class="settings-title">
+                <i class="fas fa-cog"></i> Cài Đặt Thời Gian
             </div>
-
+            
             <div class="settings-group">
-                <h4>Thời gian NGHỈ NGẮN (Short Break)</h4>
+                <h4>Thời gian làm việc (Study)</h4>
                 <div class="settings-row">
-                    <label for="setting-short-break-hour">Giờ</label>
-                    <input type="number" id="setting-short-break-hour" value="0" min="0" max="99">
-                    <label for="setting-short-break-minute">Phút</label>
-                    <input type="number" id="setting-short-break-minute" value="5" min="0" max="59">
-                </div>
-            </div>
-
-            <div class="settings-group">
-                <h4>Thời gian NGHỈ DÀI (Long Break)</h4>
-                <div class="settings-row">
-                    <label for="setting-long-break-hour">Giờ</label>
-                    <input type="number" id="setting-long-break-hour" value="0" min="0" max="99">
-                    <label for="setting-long-break-minute">Phút</label>
-                    <input type="number" id="setting-long-break-minute" value="15" min="0" max="59">
+                    <label for="study-hour">Giờ:</label>
+                    <input type="number" id="study-hour" value="0" min="0" max="24">
+                    <label for="study-minute">Phút:</label>
+                    <input type="number" id="study-minute" value="25" min="0" max="59">
                 </div>
             </div>
             
             <div class="settings-group">
-                <h4>Tổng số Chu kỳ</h4>
-                <div class="settings-row single-input">
-                    <label for="setting-total-cycles">Số chu kỳ:</label>
-                    <input type="number" id="setting-total-cycles" value="4" min="1" max="12">
+                <h4>Thời gian nghỉ (Short / Long Break)</h4>
+                <div class="settings-row">
+                    <label for="short-break">Ngắn:</label>
+                    <input type="number" id="short-break" value="5" min="1" max="60" class="single-input">
+                    <label for="long-break">Dài:</label>
+                    <input type="number" id="long-break" value="15" min="1" max="60" class="single-input">
+                    <label for="total-cycles">Chu kỳ:</label>
+                    <input type="number" id="total-cycles" value="4" min="1" max="10" class="single-input">
                 </div>
             </div>
-
+            
         </section>
 
         <section id="player-section" class="card player-card">
@@ -99,7 +87,7 @@
             </div>
             <p id="playlist-error" class="error-message"></p>
             <ul id="playlist-list" class="playlist-list">
-                </ul>
+            </ul>
         </section>
     </main>
     
@@ -107,7 +95,7 @@
         <div class="modal-content">
             <span class="modal-close-video">&times;</span>
             <h3 class="modal-title">Khôi phục Video?</h3>
-            <p>Phát hiện phiên học dang dở!</p>
+            <p>Phát hiện video đang phát dang dở!</p>
             <div class="restore-info-box">
                 <i class="fas fa-video"></i>
                 <div id="video-restore-info"></div>
@@ -162,8 +150,8 @@
             </div>
         </div>
     </div>
-    
-    <audio id="alarm-sound" src="sounds/alarm.mp3" preload="auto"></audio>
+
+    <audio id="alarm-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-bell-notification-933.mp3" preload="auto"></audio>
     
     <script src="app.js"></script>
 </body>
