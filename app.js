@@ -94,6 +94,7 @@ const savePlaylist = () => {
 // =======================================================
 
 const saveSession = () => {
+    // Lưu session nếu đang chạy HOẶC có playlist HOẶC timeLeft KHÁC với thời gian đầy đủ
     if (isRunning || currentPlaylist.length > 0 || timeLeft < timerSettings[currentMode]) {
         let videoTime = 0;
         let playerState = 0; 
@@ -151,10 +152,10 @@ const initDefaultState = () => {
     clearInterval(intervalId);
     isRunning = false;
     currentMode = 'study';
-    updateTimerSettings(); // Cập nhật lại thời gian theo cài đặt input
+    calculateTimerSettings(); // Cập nhật lại settings từ input
+    resetTimerToCurrentMode(); // Áp dụng thời gian cài đặt vào timeLeft và display
     cycleCount = 0;
     startPauseBtn.textContent = '▶ Bắt Đầu';
-    updateDisplay();
     if (player && player.getPlayerState() === 1) { 
          player.pauseVideo();
     }
@@ -166,7 +167,6 @@ const initDefaultState = () => {
 
 const showRestoreModal = () => {
     if (!pendingRestore) return;
-
     showVideoRestorePhase();
 };
 
@@ -261,17 +261,16 @@ const getSecondsFromInputs = (mode) => {
     const hours = parseInt(hourInput.value || 0);
     const minutes = parseInt(minuteInput.value || 0);
     
-    // Đảm bảo thời gian tối thiểu là 1 phút (60 giây) nếu cả giờ và phút đều bằng 0
     let totalSeconds = (hours * 3600) + (minutes * 60);
-    return Math.max(60, totalSeconds);
+    return Math.max(60, totalSeconds); // Đảm bảo tối thiểu 1 phút
 }
 
 
 /**
- * Lấy giá trị từ input Giờ/Phút/Chu kỳ và cập nhật lại timerSettings.
- * CHỈ reset timeLeft về giá trị đầy đủ nếu Timer đang dừng (!isRunning).
+ * CHỈ tính toán lại giá trị từ input và lưu vào timerSettings.
+ * HÀM NÀY KHÔNG ĐƯỢC RESET timeLeft.
  */
-const updateTimerSettings = () => {
+const calculateTimerSettings = () => {
     
     // 1. Cập nhật 3 chế độ từ input
     timerSettings.study = getSecondsFromInputs('study'); 
@@ -281,13 +280,16 @@ const updateTimerSettings = () => {
     // 2. Cập nhật chu kỳ
     const totalCycles = parseInt(document.getElementById('setting-total-cycles').value || 4);
     timerSettings.totalCycles = Math.max(1, totalCycles);
-    
-    // 3. Cập nhật timeLeft nếu timer đang ở trạng thái dừng
-    if (!isRunning) {
-        timeLeft = timerSettings[currentMode];
-        updateDisplay();
-    }
 };
+
+/**
+ * Áp dụng giá trị thời gian đầy đủ cho chế độ hiện tại.
+ * Chỉ dùng khi khởi tạo, Reset, hoặc chuyển mode.
+ */
+const resetTimerToCurrentMode = () => {
+    timeLeft = timerSettings[currentMode];
+    updateDisplay();
+}
 
 
 const fadeAlarm = (isFadeIn, callback) => {
@@ -348,23 +350,17 @@ const switchMode = async (autoStartNext = true) => {
                 
                 if (currentMode === 'study') {
                     cycleCount++;
-                    if (cycleCount % totalCycles === 0) { // Kiểm tra nếu là cuối chu kỳ (ví dụ 4/4)
+                    if (cycleCount % totalCycles === 0) {
                         currentMode = 'longBreak';
-                        // Đảm bảo lấy thời gian mới nhất
-                        timeLeft = timerSettings.longBreak; 
                     } else {
                         currentMode = 'shortBreak';
-                        // Đảm bảo lấy thời gian mới nhất
-                        timeLeft = timerSettings.shortBreak; 
                     }
                 } else { 
-                    // Sau break (ngắn hoặc dài), quay lại study
                     currentMode = 'study';
-                    // Đảm bảo lấy thời gian mới nhất
-                    timeLeft = timerSettings.study;
                 }
                 
-                updateDisplay();
+                // *** SỬ DỤNG HÀM MỚI ĐỂ RESET TIMER THEO CHẾ ĐỘ MỚI ***
+                resetTimerToCurrentMode(); 
                 
                 if (autoStartNext) {
                     isRunning = true;
@@ -389,7 +385,7 @@ const startTimer = () => {
     intervalId = setInterval(() => {
         timeLeft--;
         if (timeLeft <= 0) {
-            // Không cần gọi updateTimerSettings ở đây, chỉ cần gọi khi cần chuyển mode/reset
+            // Chỉ cần chuyển mode, việc reset thời gian đã nằm trong switchMode
             switchMode(true); 
         } else {
             updateDisplay();
@@ -400,10 +396,7 @@ const startTimer = () => {
 
 // Events cho Pomodoro
 startPauseBtn.addEventListener('click', () => {
-    // *** FIX LỖI RESET TIMER ***
-    // Đã loại bỏ lệnh gọi updateTimerSettings() khỏi sự kiện này
-    // để tránh reset timeLeft khi resume (isRunning chuyển từ false -> true).
-    
+    // *** FIX LỖI RESET TIMER: KHÔNG CÓ LỆNH GỌI NÀO GÁN LẠI timeLeft Ở ĐÂY ***
     isRunning = !isRunning;
     if (isRunning) {
         startPauseBtn.textContent = '⏸ Tạm Dừng';
@@ -415,8 +408,9 @@ startPauseBtn.addEventListener('click', () => {
 });
 
 skipBtn.addEventListener('click', () => {
-    // Gọi updateTimerSettings để đảm bảo thời gian cho mode tiếp theo là mới nhất
-    updateTimerSettings(); 
+    // 1. Tính toán lại settings mới nhất (từ input)
+    calculateTimerSettings(); 
+    // 2. Chuyển mode (việc này sẽ áp dụng thời gian mới nhất vào timeLeft)
     if (isRunning || timeLeft > 0) {
         switchMode(true); 
     }
@@ -424,14 +418,22 @@ skipBtn.addEventListener('click', () => {
 
 
 document.getElementById('btn-reset').addEventListener('click', () => {
-    initDefaultState();
+    initDefaultState(); // initDefaultState gọi calculateTimerSettings và resetTimerToCurrentMode
     localStorage.removeItem(SESSION_KEY);
 });
 
 // Lắng nghe sự kiện thay đổi trên TẤT CẢ input cài đặt
 document.querySelectorAll('.settings-group input').forEach(input => { 
-    // Gắn updateTimerSettings() trực tiếp vào sự kiện thay đổi input
-    input.addEventListener('change', updateTimerSettings);
+    input.addEventListener('change', () => {
+        // Chỉ tính toán lại settings, KHÔNG reset timer
+        calculateTimerSettings(); 
+        
+        // Nếu timer đang DỪNG, thì reset lại thời gian trên màn hình
+        // để người dùng thấy ngay thay đổi họ vừa nhập.
+        if (!isRunning) {
+            resetTimerToCurrentMode();
+        }
+    });
 });
 
 
@@ -504,7 +506,7 @@ const playVideoAtIndex = (index, forcePlay = true, startTime = 0) => {
         videoId: videoId,
         startSeconds: startTime, 
         suggestedQuality: 'small',
-        autoplay: 0 // luôn đặt 0, sau đó dùng tryPlay
+        autoplay: 0 
     }); 
     
     renderPlaylist(); 
@@ -515,9 +517,9 @@ const playVideoAtIndex = (index, forcePlay = true, startTime = 0) => {
          
          const tryPlay = () => {
              const state = player.getPlayerState();
-             if (state === 1) return; // Đã chơi, kết thúc
+             if (state === 1) return; 
 
-             if (state === 3 || state === 5 || state === 2) { // Buffering, Cued, hoặc Paused - Sẵn sàng để chơi
+             if (state === 3 || state === 5 || state === 2) { 
                  player.playVideo();
                  return;
              }
@@ -716,9 +718,11 @@ function handleDrop(e) {
 
 const init = () => {
     loadPlaylist();
-    updateTimerSettings(); 
+    // 1. Tính toán settings từ input
+    calculateTimerSettings(); 
+    // 2. Áp dụng thời gian
+    resetTimerToCurrentMode(); 
     renderPlaylist();
-    updateDisplay();
     
     // Yêu cầu quyền truy cập Notification nếu chưa có
     if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
@@ -762,7 +766,10 @@ btnRestoreTimer.onclick = () => {
     currentMode = timer.currentMode;
     timeLeft = timer.timeLeft;
     cycleCount = timer.cycleCount;
-    updateDisplay();
+    
+    // Đảm bảo settings đã được tính toán từ input trước khi khôi phục
+    calculateTimerSettings(); 
+    updateDisplay(); // Hiển thị thời gian khôi phục
     
     if (timer.isRunning) {
         isRunning = true;
