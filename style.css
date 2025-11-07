@@ -203,22 +203,19 @@ header h1 {
 
 /* ================== TÙY CHỈNH TIMER (INPUT LAYOUT MỚI) ================== */
 
-/* 1. Container chính, sử dụng Grid để tạo 2 cột */
 .timer-settings {
     display: grid;
-    /* Chia thành 2 cột bằng nhau */
     grid-template-columns: 1fr 1fr; 
-    gap: 20px 25px; /* Khoảng cách giữa các mục */
+    gap: 20px 25px; 
     padding-top: 15px;
     margin-bottom: 20px;
     text-align: left;
 }
 
-/* 2. Căn chỉnh mỗi mục cài đặt (Label trên, Input Group dưới) */
 .setting-item {
     display: flex;
     flex-direction: column;
-    gap: 8px; /* Khoảng cách giữa label và input group */
+    gap: 8px; 
     background-color: var(--input-bg);
     padding: 15px;
     border-radius: 8px;
@@ -232,16 +229,14 @@ header h1 {
     margin-bottom: 0;
 }
 
-/* 3. Sắp xếp các input và nhãn đơn vị theo chiều ngang (inline) */
 .input-group-inline {
     display: flex;
     align-items: center;
     gap: 8px; 
 }
 
-/* 4. Tùy chỉnh kích thước input number */
 .input-group-inline input[type="number"] {
-    max-width: 60px; /* Giới hạn chiều rộng cho input */
+    max-width: 60px; 
     padding: 8px 5px;
     border: 1px solid var(--border-color);
     border-radius: 4px;
@@ -251,7 +246,6 @@ header h1 {
     transition: background-color 0.3s, border-color 0.3s;
 }
 
-/* 5. Tùy chỉnh nhãn đơn vị (giờ, phút, lần) */
 .input-group-inline .unit-label {
     font-size: 0.9em;
     color: var(--text-secondary);
@@ -441,7 +435,6 @@ header h1 {
 
 /* SỬA LỖI: Đảm bảo Modal luôn hiện ở giữa màn hình */
 .modal {
-    /* Đã giữ nguyên style này để đảm bảo căn giữa */
     display: none;
     position: fixed;
     z-index: 100;
