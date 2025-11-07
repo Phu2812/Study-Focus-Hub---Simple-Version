@@ -18,7 +18,11 @@
     <main class="container">
         <section id="timer-section" class="card timer-card">
             <h2 id="timer-mode" class="study-mode">TẬP TRUNG HỌC</h2>
-            <div id="countdown" class="countdown">25:00</div>
+            
+            <div class="timer-display-box">
+                <div id="countdown" class="countdown">25:00</div>
+            </div>
+            
             <p id="cycle-info">Chu kỳ: 0 / 4</p>
             
             <div class="controls">
@@ -29,21 +33,46 @@
                 </div>
             </div>
 
+            <h3 class="settings-title"><i class="fas fa-cog"></i> Cài đặt Thời gian</h3>
+
             <div class="settings-group">
-                <h3>Cài đặt thời gian</h3>
-                <label for="setting-study-hour">Giờ học:</label>
-                <input type="number" id="setting-study-hour" value="0" min="0" max="5">
-                <label for="setting-study-minute">Phút học:</label>
-                <input type="number" id="setting-study-minute" value="25" min="1" max="59">
+                <h4>Thời gian TẬP TRUNG (Study)</h4>
+                <div class="settings-row">
+                    <label for="setting-study-hour">Giờ</label>
+                    <input type="number" id="setting-study-hour" value="0" min="0" max="99">
+                    <label for="setting-study-minute">Phút</label>
+                    <input type="number" id="setting-study-minute" value="25" min="0" max="59">
+                </div>
             </div>
+
             <div class="settings-group">
-                <label for="setting-short-break">Nghỉ ngắn (phút):</label>
-                <input type="number" id="setting-short-break" value="5" min="1" max="30">
-                <label for="setting-long-break">Nghỉ dài (phút):</label>
-                <input type="number" id="setting-long-break" value="15" min="1" max="60">
-                <label for="setting-total-cycles">Tổng chu kỳ:</label>
-                <input type="number" id="setting-total-cycles" value="4" min="1" max="12">
+                <h4>Thời gian NGHỈ NGẮN (Short Break)</h4>
+                <div class="settings-row">
+                    <label for="setting-short-break-hour">Giờ</label>
+                    <input type="number" id="setting-short-break-hour" value="0" min="0" max="99">
+                    <label for="setting-short-break-minute">Phút</label>
+                    <input type="number" id="setting-short-break-minute" value="5" min="0" max="59">
+                </div>
             </div>
+
+            <div class="settings-group">
+                <h4>Thời gian NGHỈ DÀI (Long Break)</h4>
+                <div class="settings-row">
+                    <label for="setting-long-break-hour">Giờ</label>
+                    <input type="number" id="setting-long-break-hour" value="0" min="0" max="99">
+                    <label for="setting-long-break-minute">Phút</label>
+                    <input type="number" id="setting-long-break-minute" value="15" min="0" max="59">
+                </div>
+            </div>
+            
+            <div class="settings-group">
+                <h4>Tổng số Chu kỳ</h4>
+                <div class="settings-row single-input">
+                    <label for="setting-total-cycles">Số chu kỳ:</label>
+                    <input type="number" id="setting-total-cycles" value="4" min="1" max="12">
+                </div>
+            </div>
+
         </section>
 
         <section id="player-section" class="card player-card">
