@@ -6,7 +6,6 @@
     <title>Study Focus Hub | Pomodoro & Playlist</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <script src="https://www.youtube.com/iframe_api"></script> 
     <link rel="icon" type="image/x-icon" href="favicon.ico"> 
 </head>
 <body>
@@ -31,37 +30,33 @@
             <div class="controls">
                 <div class="controls-row-1">
                     <button id="btn-start-pause" class="btn-primary">▶ Bắt Đầu</button>
-                    <button id="btn-reset" class="btn-secondary">🔄 Đặt Lại</button>
-                    <button id="btn-skip" class="btn-secondary">⏩ Bỏ Qua</button>
+                    <button id="btn-reset" class="btn-secondary"><i class="fas fa-redo"></i></button>
+                    <button id="btn-skip" class="btn-secondary"><i class="fas fa-forward"></i></button>
+                </div>
+
+                <div class="settings-grid">
+                    <div class="setting-item">
+                        <label>Học (Giờ)</label>
+                        <input type="number" id="study-hour" min="0" max="99" value="0">
+                    </div>
+                    <div class="setting-item">
+                        <label>Học (Phút)</label>
+                        <input type="number" id="study-minute" min="1" max="59" value="25">
+                    </div>
+                    <div class="setting-item">
+                        <label>Nghỉ Ngắn (Phút)</label>
+                        <input type="number" id="short-break" min="1" max="59" value="5">
+                    </div>
+                    <div class="setting-item">
+                        <label>Nghỉ Dài (Phút)</label>
+                        <input type="number" id="long-break" min="1" max="99" value="15">
+                    </div>
+                    <div class="setting-item full-width">
+                        <label>Tổng Chu Kỳ</label>
+                        <input type="number" id="total-cycles" min="1" max="99" value="4">
+                    </div>
                 </div>
             </div>
-            
-            <div class="settings-title">
-                <i class="fas fa-cog"></i> Cài Đặt Thời Gian
-            </div>
-            
-            <div class="settings-group">
-                <h4>Thời gian làm việc (Study)</h4>
-                <div class="settings-row">
-                    <label for="study-hour">Giờ:</label>
-                    <input type="number" id="study-hour" value="0" min="0" max="24">
-                    <label for="study-minute">Phút:</label>
-                    <input type="number" id="study-minute" value="25" min="0" max="59">
-                </div>
-            </div>
-            
-            <div class="settings-group">
-                <h4>Thời gian nghỉ (Short / Long Break)</h4>
-                <div class="settings-row">
-                    <label for="short-break">Ngắn:</label>
-                    <input type="number" id="short-break" value="5" min="1" max="60" class="single-input">
-                    <label for="long-break">Dài:</label>
-                    <input type="number" id="long-break" value="15" min="1" max="60" class="single-input">
-                    <label for="total-cycles">Chu kỳ:</label>
-                    <input type="number" id="total-cycles" value="4" min="1" max="10" class="single-input">
-                </div>
-            </div>
-            
         </section>
 
         <section id="player-section" class="card player-card">
@@ -86,51 +81,10 @@
                 <button id="btn-add-song" class="btn-primary">Thêm</button>
             </div>
             <p id="playlist-error" class="error-message"></p>
-            <ul id="playlist-list" class="playlist-list">
-            </ul>
+            <ul id="playlist-list" class="playlist-list"></ul>
         </section>
     </main>
-    
-    <div id="video-restore-modal" class="modal">
-        <div class="modal-content">
-            <span class="modal-close-video">&times;</span>
-            <h3 class="modal-title">Khôi phục Video?</h3>
-            <p>Phát hiện video đang phát dang dở!</p>
-            <div class="restore-info-box">
-                <i class="fas fa-video"></i>
-                <div id="video-restore-info"></div>
-            </div>
-            <div class="modal-actions">
-                <button id="btn-restore-video" class="btn-primary">
-                    <i class="fas fa-play"></i> Tiếp tục Video cũ
-                </button>
-                <button id="btn-skip-video" class="btn-secondary">
-                    <i class="fas fa-forward"></i> Bỏ qua Video
-                </button>
-            </div>
-        </div>
-    </div>
 
-    <div id="timer-restore-modal" class="modal">
-        <div class="modal-content">
-            <span class="modal-close-timer">&times;</span>
-            <h3 class="modal-title">Khôi phục Timer?</h3>
-            <p>Phát hiện thời gian Pomodoro dang dở!</p>
-            <div class="restore-info-box">
-                <i class="fas fa-clock"></i>
-                <div id="timer-restore-info"></div>
-            </div>
-            <div class="modal-actions">
-                <button id="btn-restore-timer" class="btn-primary">
-                    <i class="fas fa-clock"></i> Tiếp tục Timer cũ
-                </button>
-                <button id="btn-skip-timer" class="btn-secondary">
-                    <i class="fas fa-redo"></i> Bắt đầu Timer mới
-                </button>
-            </div>
-        </div>
-    </div>
-    
     <div id="settings-restore-modal" class="modal">
         <div class="modal-content">
             <span class="modal-close-settings">&times;</span>
@@ -150,10 +104,50 @@
             </div>
         </div>
     </div>
-
-    <audio id="alarm-sound" src="sounds/alarm.mp3"></audio>
     
-    <script src="app.js"></script>
+    <div id="video-restore-modal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close-video">&times;</span>
+            <h3 class="modal-title">Khôi phục Video?</h3>
+            <p>Phát hiện video đang phát dở!</p>
+            <div class="restore-info-box">
+                <i class="fas fa-video"></i>
+                <div id="video-restore-info"></div>
+            </div>
+            <div class="modal-actions">
+                <button id="btn-restore-video" class="btn-primary">
+                    <i class="fas fa-play"></i> Tiếp tục Video cũ
+                </button>
+                <button id="btn-skip-video" class="btn-secondary">
+                    <i class="fas fa-forward"></i> Bỏ qua Video
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="timer-restore-modal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close-timer">&times;</span>
+            <h3 class="modal-title">Khôi phục Timer?</h3>
+            <p>Phát hiện thời gian Pomodoro đang chạy dở!</p>
+            <div class="restore-info-box">
+                <i class="fas fa-clock"></i>
+                <div id="timer-restore-info"></div>
+            </div>
+            <div class="modal-actions">
+                <button id="btn-restore-timer" class="btn-primary">
+                    <i class="fas fa-clock"></i> Tiếp tục Timer cũ
+                </button>
+                <button id="btn-skip-timer" class="btn-secondary">
+                    <i class="fas fa-redo"></i> Bắt đầu Timer mới
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <audio id="alarm-sound" src="sounds/alarm.mp3"></audio> 
+    
+    <script src="https://www.youtube.com/iframe_api"></script> 
+    <script src="app.js"></script> 
 </body>
 </html>
-
