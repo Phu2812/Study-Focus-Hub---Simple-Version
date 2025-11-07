@@ -34,31 +34,39 @@
                     <button id="btn-reset" class="btn-secondary"><i class="fas fa-redo"></i> Đặt lại</button>
                     <button id="btn-skip" class="btn-secondary"><i class="fas fa-forward"></i> Bỏ qua</button>
                 </div>
-                <div class="controls-row-2">
+                <div class="controls-row-2"> 
                     <button id="btn-settings" class="btn-secondary"><i class="fas fa-cog"></i> Cài đặt</button>
                 </div>
             </div>
             
             <div id="settings-area" class="settings-area">
-                <h3>Cài đặt Timer</h3>
+                <h3>⚙️ Cài đặt Timer</h3>
                 <div class="setting-group">
                     <label>Thời gian Học:</label>
-                    <input type="number" id="study-hour" value="0" min="0" max="59"> giờ
-                    <input type="number" id="study-minute" value="25" min="0" max="59"> phút
+                    <div class="input-inline">
+                        <input type="number" id="study-hour" value="0" min="0" max="59"> <span>giờ</span>
+                        <input type="number" id="study-minute" value="25" min="0" max="59"> <span>phút</span>
+                    </div>
                 </div>
                 <div class="setting-group">
                     <label>Nghỉ Ngắn:</label>
-                    <input type="number" id="short-break" value="5" min="1" max="60"> phút
+                    <div class="input-inline">
+                        <input type="number" id="short-break" value="5" min="1" max="60"> <span>phút</span>
+                    </div>
                 </div>
                 <div class="setting-group">
                     <label>Nghỉ Dài:</label>
-                    <input type="number" id="long-break" value="15" min="1" max="60"> phút
+                    <div class="input-inline">
+                        <input type="number" id="long-break" value="15" min="1" max="60"> <span>phút</span>
+                    </div>
                 </div>
                 <div class="setting-group">
                     <label>Chu kỳ (trước Nghỉ Dài):</label>
-                    <input type="number" id="total-cycles" value="4" min="1" max="10"> lần
+                    <div class="input-inline">
+                        <input type="number" id="total-cycles" value="4" min="1" max="10"> <span>lần</span>
+                    </div>
                 </div>
-                </div>
+            </div>
         </section>
 
         <section id="video-section" class="card video-card">
