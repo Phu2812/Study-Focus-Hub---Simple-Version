@@ -8,7 +8,7 @@ const SETTINGS_KEY = 'timer_settings_store';
 const THEME_KEY = 'app_theme_mode'; 
 const YOUTUBE_OEMBED_API = 'https://www.youtube.com/oembed?url=';
 const ALARM_FADE_DURATION = 1000; 
-const DEFAULT_ALARM_SOUND = 'sounds/alarm.mp3'; // Bạn cần có file này
+const DEFAULT_ALARM_SOUND = 'sounds/alarm.mp3'; 
 
 let player; 
 let currentPlaylist = [];
@@ -36,7 +36,7 @@ let currentMode = 'study';
 let timeLeft = timerSettings.study;
 let isRunning = false;
 let cycleCount = 0; 
-let pendingRestore = null; 
+let pendingRestore = null; // CHỨA DỮ LIỆU KHÔI PHỤC
 let currentTheme = 'dark'; // Mặc định là dark
 
 // Elements
@@ -76,19 +76,16 @@ const totalCyclesInput = document.getElementById('total-cycles');
 //                   UTILITY FUNCTIONS
 // =======================================================
 
-/** SỬA LỖI QUAN TRỌNG: Đảm bảo khi hết giờ (totalSeconds <= 0), hiển thị 00:00 */
 const formatTime = (totalSeconds) => {
     if (totalSeconds <= 0) {
         return '00:00'; 
     }
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
-    // Đảm bảo luôn có 2 chữ số (00)
     return `${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
 };
 
 const getYouTubeId = (url) => {
-    // Regex lấy ID từ URL thông thường, share link, hoặc embed
     const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|\w\/\w\/|v=)|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/|youtube\.com\/live\/)([a-zA-Z0-9_-]{11})/;
     const match = url.match(regex);
     return (match && match[1].length === 11) ? match[1] : null;
@@ -112,10 +109,8 @@ const saveSettings = () => {
 const loadSettings = () => {
     const savedSettings = localStorage.getItem(SETTINGS_KEY);
     if (savedSettings) {
-        // Tải cài đặt thô (giờ/phút/chu kỳ)
         timerSettings.raw = JSON.parse(savedSettings);
         
-        // Tái tính toán cài đặt giây (tổng thời gian)
         calculateTimerSettings();
         
         // Cập nhật giá trị hiển thị trên Input
@@ -125,14 +120,12 @@ const loadSettings = () => {
         longBreakInput.value = timerSettings.raw.longBreak;
         totalCyclesInput.value = timerSettings.raw.totalCycles;
 
-        // Lưu trữ để có thể hỏi người dùng có muốn khôi phục không (chỉ khi có session đang chạy)
-        // Nếu không có session đang chạy, apply luôn setting
         const savedSession = sessionStorage.getItem(SESSION_KEY);
         if (savedSession) {
             pendingRestore = pendingRestore || {};
             pendingRestore.settings = timerSettings.raw; // Đánh dấu là có settings cũ
         } else {
-            // Nếu không có session cũ, áp dụng luôn và cập nhật display
+            // Nếu không có session cũ, apply luôn setting
             initialTime = timerSettings[currentMode];
             timeLeft = initialTime;
             updateDisplay();
@@ -145,11 +138,11 @@ const saveSession = () => {
     if (isRunning || startPauseBtn.textContent === '▶ Tiếp Tục') { 
         sessionStorage.setItem(SESSION_KEY, JSON.stringify({
             video: {
-                id: currentPlaylist[currentTrackIndex]?.id,
+                id: currentPlaylist[currentTrackIndex]?.id || null, // FIX: Lưu null nếu không có ID
                 time: player ? player.getCurrentTime() : 0,
                 index: currentTrackIndex,
                 isPlaying: player ? (player.getPlayerState() === YT.PlayerState.PLAYING) : false,
-                title: currentPlaylist[currentTrackIndex]?.title || 'Không có tiêu đề',
+                title: currentPlaylist[currentTrackIndex]?.title || 'Không có video đang phát', // FIX: Tiêu đề rõ ràng hơn
             },
             timer: {
                 currentMode: currentMode,
@@ -172,7 +165,7 @@ const closeAllModalsAndClearSession = () => {
 };
 
 // =======================================================
-//                   THEME LOGIC
+//                   THEME LOGIC (Giữ nguyên)
 // =======================================================
 
 const loadTheme = () => {
@@ -187,7 +180,6 @@ const applyTheme = (theme) => {
     document.body.classList.toggle('light-mode', theme === 'light');
     themeToggleBtn.innerHTML = theme === 'dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
     localStorage.setItem(THEME_KEY, theme);
-    // Cần cập nhật lại Progress Circle để màu background chính xác
     updateDisplay(); 
 };
 
@@ -197,12 +189,11 @@ themeToggleBtn.addEventListener('click', () => {
 });
 
 // =======================================================
-//                   TIMER LOGIC
+//                   TIMER LOGIC (Giữ nguyên)
 // =======================================================
 
 const calculateTimerSettings = () => {
     const raw = timerSettings.raw;
-    // Tính toán lại tổng số giây
     timerSettings.study = (parseInt(raw.studyHour) * 3600) + (parseInt(raw.studyMinute) * 60);
     timerSettings.shortBreak = parseInt(raw.shortBreak) * 60;
     timerSettings.longBreak = parseInt(raw.longBreak) * 60;
@@ -213,7 +204,6 @@ const updateDisplay = () => {
     timerDisplayEl.textContent = formatTime(timeLeft);
     cycleInfoEl.textContent = `Chu kỳ: ${cycleCount} / ${timerSettings.totalCycles}`;
     
-    // Cập nhật mode
     let modeText = '';
     let modeClass = '';
     let modeColor = '';
@@ -235,12 +225,9 @@ const updateDisplay = () => {
     timerModeEl.textContent = modeText;
     timerModeEl.className = modeClass;
     
-    // Cập nhật Progress Circle
     const totalTime = timerSettings[currentMode];
-    // Đảm bảo totalTime > 0 để tránh chia cho 0
     const percentage = totalTime > 0 ? 100 - (timeLeft / totalTime) * 100 : 0;
     
-    // Áp dụng màu và phần trăm
     progressCircle.style.background = `conic-gradient(${modeColor} ${percentage}%, var(--circle-bg) ${percentage}%)`;
 };
 
@@ -259,7 +246,6 @@ const startTimer = () => {
             intervalId = null;
             isRunning = false;
             
-            // Tự động chuyển mode và chạy lại timer
             switchMode();
         }
     }, 1000);
@@ -275,11 +261,8 @@ const pauseTimer = (updateButton = true) => {
 };
 
 const resetTimerToCurrentMode = () => {
-    // Đặt lại thời gian ban đầu của mode hiện tại
     initialTime = timerSettings[currentMode];
     timeLeft = initialTime;
-    
-    // Đảm bảo cập nhật hiển thị ngay lập tức
     updateDisplay();
 };
 
@@ -288,17 +271,15 @@ const resetTimer = () => {
     currentMode = 'study';
     cycleCount = 0;
     startPauseBtn.textContent = '▶ Bắt Đầu';
-    // Đảm bảo timer hiển thị đúng giờ học đã cài đặt
     resetTimerToCurrentMode(); 
 };
 
 // =======================================================
-//                   MODE SWITCHING & ALARM
+//                   MODE SWITCHING & ALARM (Giữ nguyên)
 // =======================================================
 
 const fadeAlarm = (isStart) => {
     return new Promise((resolve) => {
-        // Đặt âm lượng mặc định trước khi phát
         alarmSound.volume = 0.5;
         alarmSound.currentTime = 0;
 
@@ -306,52 +287,41 @@ const fadeAlarm = (isStart) => {
             alarmSound.play().catch(e => console.log("Lỗi phát âm thanh:", e)); 
         }
         
-        // Tạo hiệu ứng Fade Out
         let volume = isStart ? 0.5 : 0;
         const fadeInterval = setInterval(() => {
-            volume -= 0.05; // Giảm 0.05 mỗi bước
+            volume -= 0.05; 
             if (volume <= 0) {
                 alarmSound.pause();
-                alarmSound.currentTime = 0; // Đưa về đầu
+                alarmSound.currentTime = 0; 
                 clearInterval(fadeInterval);
                 resolve();
             }
             alarmSound.volume = Math.max(0, volume);
-        }, ALARM_FADE_DURATION / 10); // Giả sử 10 bước trong 1 giây
+        }, ALARM_FADE_DURATION / 10); 
         
-        // Đảm bảo dừng hẳn sau 3 giây (để báo thức chạy đủ)
         setTimeout(() => {
             clearInterval(fadeInterval);
             alarmSound.pause();
             alarmSound.volume = 0.5;
             resolve();
-        }, 3000); // 3 giây
+        }, 3000);
     });
 };
 
-/**
- * Hàm chuyển mode Pomodoro. 
- * ĐÃ SỬA: Luôn tự động bắt đầu Timer cho mode tiếp theo.
- */
 const switchMode = async () => {
-    // 1. Dừng Timer và Video (nếu đang chạy)
     pauseTimer(false); 
     if (player && player.pauseVideo) {
         player.pauseVideo();
     }
     
-    // 2. Phát và chờ báo thức kết thúc (3 giây)
     await fadeAlarm(true); 
     
-    // 3. Tự động phát lại video sau khi báo thức xong
     if (player && currentPlaylist.length > 0 && player.playVideo) {
-        // Chỉ phát lại nếu video đang ở trạng thái dừng (Paused) hoặc sẵn sàng (Cued)
         if (player.getPlayerState() === YT.PlayerState.PAUSED || player.getPlayerState() === YT.PlayerState.ENDED || player.getPlayerState() === YT.PlayerState.CUED) {
             player.playVideo();
         }
     }
 
-    // 4. Chuyển Mode và Cập nhật Chu kỳ 
     if (currentMode === 'study') {
         cycleCount++;
         if (cycleCount % timerSettings.totalCycles === 0) {
@@ -359,14 +329,12 @@ const switchMode = async () => {
         } else {
             currentMode = 'shortBreak';
         }
-    } else { // shortBreak hoặc longBreak
+    } else { 
         currentMode = 'study';
     }
 
-    // 5. Reset và Cập nhật hiển thị cho mode mới
     resetTimerToCurrentMode(); 
     
-    // 6. TỰ ĐỘNG BẮT ĐẦU MODE MỚI
     startTimer();
 };
 
@@ -376,21 +344,26 @@ const switchMode = async () => {
 // =======================================================
 
 function onYouTubeIframeAPIReady() {
-    // Tạo Player nếu có playlist
     if (currentPlaylist.length > 0) {
-        createPlayer(currentPlaylist[0].id);
+        // Nếu có session cũ, không tạo player ngay mà chờ checkRestoreStatus để tạo
+        if (!pendingRestore || !pendingRestore.session || !pendingRestore.session.video.id) {
+            createPlayer(currentPlaylist[0].id);
+        }
     } else {
-        // Nếu không có playlist, hiện placeholder
         document.getElementById('player-placeholder').style.display = 'flex';
     }
 
-    // Sau khi API sẵn sàng, chạy kiểm tra khôi phục
+    // Chạy kiểm tra khôi phục sau khi API sẵn sàng (để đảm bảo player có thể được tạo)
     checkRestoreStatus();
 }
 
 function createPlayer(videoId, startSeconds = 0) {
-    // Ẩn placeholder
     document.getElementById('player-placeholder').style.display = 'none';
+
+    // Xóa player cũ trước khi tạo player mới nếu player đã tồn tại
+    if (player) {
+        player.destroy();
+    }
 
     player = new YT.Player('youtube-player', {
         videoId: videoId,
@@ -408,38 +381,35 @@ function createPlayer(videoId, startSeconds = 0) {
 }
 
 function onPlayerReady(event) {
-    if (pendingRestore && pendingRestore.session?.video?.id === event.target.getVideoData().video_id) {
-        // Nếu đang trong quá trình khôi phục, logic sẽ được xử lý qua Modal
-        // Không tự động phát ở đây
-    } else if (currentPlaylist.length > 0 && currentTrackIndex === -1) {
-        // Lần đầu load trang mà không có session cũ
+    // Logic khôi phục sẽ được xử lý trong checkRestoreStatus
+    // Đảm bảo index được cập nhật cho lần load đầu tiên
+    if (currentPlaylist.length > 0 && currentTrackIndex === -1 && (!pendingRestore || !pendingRestore.session)) {
         currentTrackIndex = 0;
         document.getElementById('playlist-list').querySelector('li')?.classList.add('current-track');
     }
     
-    // Sau khi player ready, kiểm tra xem có cần khôi phục settings/session không
-    if (pendingRestore?.settings && !pendingRestore.session) {
-         showSettingsRestorePhase(pendingRestore.settings);
-    } else if (pendingRestore?.session && !pendingRestore.settings) {
-         showVideoRestorePhase(); // Chỉ hiển thị Video Restore nếu không có Settings Restore
-    } else if (pendingRestore?.settings && pendingRestore.session) {
-         showSettingsRestorePhase(pendingRestore.settings); // Ưu tiên Settings trước
+    // Nếu chưa có modal nào được hiển thị, bắt đầu quy trình kiểm tra khôi phục
+    if (!settingsRestoreModalEl.style.display || settingsRestoreModalEl.style.display === 'none') {
+        // Nếu có settings cũ VÀ (chưa có session HOẶC session không có video) -> ưu tiên settings
+        if (pendingRestore?.settings) {
+            showSettingsRestorePhase(pendingRestore.settings);
+        } else if (pendingRestore?.session) {
+            // Nếu không có settings cũ, chuyển sang Video/Timer ngay
+            showVideoRestorePhase();
+        }
     }
 }
 
 function onPlayerStateChange(event) {
-    // Tự động chuyển bài khi kết thúc (State 0)
     if (event.data === YT.PlayerState.ENDED) {
         playNextTrack();
     }
-    // Cập nhật nút Play/Pause
     const playPauseIcon = document.getElementById('btn-play-pause').querySelector('i');
     if (event.data === YT.PlayerState.PLAYING) {
         playPauseIcon.className = 'fas fa-pause';
     } else {
         playPauseIcon.className = 'fas fa-play';
     }
-    // Lưu session khi trạng thái thay đổi
     saveSession(); 
 }
 
@@ -448,12 +418,10 @@ const playVideoAtIndex = (index, autoPlay = true, startSeconds = 0) => {
         currentTrackIndex = index;
         const videoId = currentPlaylist[index].id;
         
-        // Cập nhật class current-track trên giao diện
         document.querySelectorAll('.playlist-list li').forEach((li, i) => {
             li.classList.toggle('current-track', i === index);
         });
 
-        // Nếu Player đã tồn tại, load video mới
         if (player && player.loadVideoById) {
             player.loadVideoById({
                 'videoId': videoId,
@@ -463,7 +431,6 @@ const playVideoAtIndex = (index, autoPlay = true, startSeconds = 0) => {
                 player.pauseVideo();
             }
         } else {
-            // Nếu chưa có Player, tạo Player mới
             createPlayer(videoId, startSeconds);
         }
         
@@ -484,11 +451,11 @@ const playPrevTrack = () => {
 };
 
 // =======================================================
-//                   PLAYLIST & UI LOGIC
+//                   PLAYLIST & UI LOGIC (Giữ nguyên)
 // =======================================================
 
 const renderPlaylist = () => {
-    playlistListEl.innerHTML = ''; // Clear cũ
+    playlistListEl.innerHTML = '';
     if (currentPlaylist.length === 0) {
         document.getElementById('player-placeholder').style.display = 'flex';
         return;
@@ -502,7 +469,6 @@ const renderPlaylist = () => {
         li.dataset.index = index;
         li.classList.toggle('current-track', index === currentTrackIndex);
         
-        // 1. Tiêu đề
         const titleSpan = document.createElement('span');
         titleSpan.textContent = `${index + 1}. ${track.title}`;
         titleSpan.title = track.title;
@@ -510,7 +476,6 @@ const renderPlaylist = () => {
             playVideoAtIndex(index, true, 0);
         });
 
-        // 2. Nút Xóa
         const deleteBtn = document.createElement('button');
         deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
         deleteBtn.title = 'Xóa khỏi Playlist';
@@ -519,18 +484,16 @@ const renderPlaylist = () => {
             removeSong(index);
         });
 
-        // 3. Nút Kéo (Drag Handle)
         const dragHandle = document.createElement('button');
         dragHandle.innerHTML = '<i class="fas fa-grip-vertical"></i>';
         dragHandle.title = 'Kéo để sắp xếp';
         dragHandle.classList.add('drag-handle');
-        dragHandle.addEventListener('mousedown', (e) => e.stopPropagation()); // Ngăn click lan truyền
+        dragHandle.addEventListener('mousedown', (e) => e.stopPropagation()); 
 
         li.appendChild(dragHandle);
         li.appendChild(titleSpan);
         li.appendChild(deleteBtn);
         
-        // Kéo và Thả (Drag and Drop)
         li.addEventListener('dragstart', handleDragStart);
         li.addEventListener('dragenter', handleDragEnter);
         li.addEventListener('dragover', handleDragOver);
@@ -545,22 +508,19 @@ const renderPlaylist = () => {
 const removeSong = (index) => {
     currentPlaylist.splice(index, 1);
     
-    // Cập nhật currentTrackIndex sau khi xóa
     if (currentTrackIndex === index) {
-        currentTrackIndex = -1; // Đánh dấu là không có bài nào đang phát
+        currentTrackIndex = -1;
     } else if (currentTrackIndex > index) {
-        currentTrackIndex--; // Giảm index nếu bài đang phát nằm sau bài bị xóa
+        currentTrackIndex--;
     }
     
     savePlaylist();
     renderPlaylist();
     
-    // Nếu xóa hết, hiển thị placeholder
     if (currentPlaylist.length === 0) {
         document.getElementById('player-placeholder').style.display = 'flex';
         if(player && player.stopVideo) player.stopVideo();
     } else if (currentTrackIndex === -1) {
-        // Tự động chọn bài đầu tiên nếu bài đang phát bị xóa
         playVideoAtIndex(0, false, 0);
     }
 };
@@ -573,7 +533,6 @@ const addSong = async (url) => {
         return;
     }
 
-    // Kiểm tra trùng lặp
     if (currentPlaylist.some(track => track.id === videoId)) {
         errorEl.textContent = 'Video này đã có trong Playlist.';
         return;
@@ -594,7 +553,6 @@ const addSong = async (url) => {
         renderPlaylist();
         urlInputEl.value = '';
 
-        // Tự động load và play bài đầu tiên nếu playlist trống
         if (currentPlaylist.length === 1) {
             currentTrackIndex = 0;
             playVideoAtIndex(0, true, 0);
@@ -608,7 +566,7 @@ const addSong = async (url) => {
 
 
 // =======================================================
-//                   DRAG & DROP LOGIC
+//                   DRAG & DROP LOGIC (Giữ nguyên)
 // =======================================================
 
 let draggedItem = null;
@@ -643,11 +601,9 @@ function handleDrop(e) {
         const fromIndex = parseInt(draggedItem.dataset.index);
         const toIndex = parseInt(this.dataset.index);
 
-        // Di chuyển trong mảng JS
         const [movedItem] = currentPlaylist.splice(fromIndex, 1);
         currentPlaylist.splice(toIndex, 0, movedItem);
 
-        // Cập nhật currentTrackIndex
         if (currentTrackIndex === fromIndex) {
             currentTrackIndex = toIndex;
         } else if (fromIndex < currentTrackIndex && toIndex >= currentTrackIndex) {
@@ -668,11 +624,19 @@ function handleDragEnd() {
 }
 
 // =======================================================
-//                   MODAL RESTORE LOGIC
+//                   MODAL RESTORE LOGIC (ĐÃ SỬA LỖI)
 // =======================================================
 
 const showSettingsRestorePhase = (settings) => {
-    // Hiển thị thông tin cài đặt cũ
+    // FIX: Nếu không có settings thì bỏ qua
+    if (!settings) {
+        // Chuyển sang Video Restore nếu có session
+        if (pendingRestore?.session) {
+            showVideoRestorePhase();
+        }
+        return;
+    }
+
     const infoEl = document.getElementById('settings-restore-info');
     infoEl.innerHTML = `
         <p><strong>Học:</strong> ${settings.studyHour} giờ ${settings.studyMinute} phút</p>
@@ -684,10 +648,17 @@ const showSettingsRestorePhase = (settings) => {
     settingsRestoreModalEl.style.display = 'flex';
 };
 
+/** SỬA LỖI: Kiểm tra session và video data trước khi hiển thị */
 const showVideoRestorePhase = () => {
+    // FIX: Đảm bảo có session và có video ID hợp lệ
+    if (!pendingRestore || !pendingRestore.session || !pendingRestore.session.video.id) {
+        // Nếu không có video, chuyển sang hỏi Timer ngay
+        showTimerRestorePhase();
+        return;
+    }
+    
     const { video } = pendingRestore.session;
     
-    // Thêm data vào nút restore để sử dụng sau
     btnRestoreVideo.dataset.time = video.time;
     btnRestoreVideo.dataset.index = video.index;
     btnRestoreVideo.dataset.play = video.isPlaying;
@@ -700,78 +671,46 @@ const showVideoRestorePhase = () => {
     videoRestoreModalEl.style.display = 'flex';
 };
 
+/** SỬA LỖI: Kiểm tra session data trước khi hiển thị */
 const showTimerRestorePhase = () => {
-    if (!pendingRestore || !pendingRestore.session) {
+    // FIX: Đảm bảo có session và có dữ liệu timer
+    if (!pendingRestore || !pendingRestore.session || !pendingRestore.session.timer) {
         closeAllModalsAndClearSession();
         return;
     }
     
     const { timer } = pendingRestore.session;
     
+    // FIX: Cải thiện nội dung hiển thị mode
+    const modeText = timer.currentMode === 'study' ? 'Học' : timer.currentMode === 'shortBreak' ? 'Nghỉ Ngắn' : 'Nghỉ Dài';
+
     document.getElementById('timer-restore-info').innerHTML = `
-        <p><strong>Chế độ:</strong> ${timer.currentMode === 'study' ? 'Học' : 'Nghỉ'}</p>
+        <p><strong>Chế độ:</strong> ${modeText}</p>
         <p><strong>Còn lại:</strong> ${formatTime(timer.timeLeft)}</p>
-        <p><strong>Chu kỳ:</strong> ${timer.cycleCount}</p>
+        <p><strong>Chu kỳ:</strong> ${timer.cycleCount} / ${timerSettings.totalCycles}</p>
         <p><strong>Trạng thái:</strong> ${timer.isRunning ? 'Đang chạy' : 'Tạm dừng'}</p>
     `;
     
     timerRestoreModalEl.style.display = 'flex';
 };
 
+/** SỬA LỖI: Cập nhật luồng kiểm tra khôi phục */
 const checkRestoreStatus = () => {
-    // Đã load settings và session trong init.
-    // Xử lý logic hiển thị modal trong onPlayerReady.
-    // Nếu không có player, ta vẫn cần hiển thị modal settings
-    if (!player && pendingRestore?.settings) {
+    // Nếu có settings và session, show Settings trước.
+    if (pendingRestore?.settings) {
         showSettingsRestorePhase(pendingRestore.settings);
-    } else if (!player && pendingRestore?.session) {
-        // Cần Player để load video trước khi hỏi khôi phục Video
-        // Nếu không có Player, ta chỉ có thể hỏi về Timer
-        showTimerRestorePhase();
+    } 
+    // Nếu chỉ có session (và không có settings hoặc settings đã bị bỏ qua), show Video/Timer.
+    else if (pendingRestore?.session) {
+        showVideoRestorePhase(); 
     }
 };
 
 // =======================================================
-//                   EVENT LISTENERS
+//                   EVENT LISTENERS (ĐÃ SỬA LỖI)
 // =======================================================
 
-// Timer Events
-startPauseBtn.addEventListener('click', () => {
-    if (isRunning) {
-        pauseTimer();
-    } else {
-        startTimer();
-    }
-});
-
-resetBtn.addEventListener('click', resetTimer);
-
-// SỬA LỖI: Bỏ tham số trong switchMode để nó luôn tự động chạy Timer tiếp theo
-skipBtn.addEventListener('click', () => switchMode()); 
-
-// Player Controls
-document.getElementById('btn-add-song').addEventListener('click', () => {
-    addSong(urlInputEl.value.trim());
-});
-
-document.getElementById('btn-play-pause').addEventListener('click', () => {
-    if (!player) return;
-    const state = player.getPlayerState();
-    if (state === YT.PlayerState.PLAYING) {
-        player.pauseVideo();
-    } else if (state === YT.PlayerState.PAUSED || state === YT.PlayerState.ENDED || state === YT.PlayerState.CUED) {
-        player.playVideo();
-    } else if (currentPlaylist.length > 0 && currentTrackIndex === -1) {
-        // Nếu chưa load bài nào, load bài đầu tiên
-        playVideoAtIndex(0, true, 0);
-    }
-});
-
-document.getElementById('btn-next').addEventListener('click', playNextTrack);
-document.getElementById('btn-prev').addEventListener('click', playPrevTrack);
-
-
-// Input Settings Events
+// Input Settings Events (Giữ nguyên)
 const handleSettingsChange = (e) => {
     let value = parseInt(e.target.value);
     if (isNaN(value) || value < 0) {
@@ -779,24 +718,20 @@ const handleSettingsChange = (e) => {
     }
     e.target.value = value;
     
-    // Lưu giá trị thô
     if (e.target.id === 'study-hour') timerSettings.raw.studyHour = value;
     if (e.target.id === 'study-minute') timerSettings.raw.studyMinute = value;
     if (e.target.id === 'short-break') timerSettings.raw.shortBreak = value;
     if (e.target.id === 'long-break') timerSettings.raw.longBreak = value;
     if (e.target.id === 'total-cycles') timerSettings.raw.totalCycles = value;
 
-    // Tái tính toán và lưu
     calculateTimerSettings();
     saveSettings();
 
-    // Nếu đang ở trạng thái dừng, cập nhật lại thời gian hiển thị
     if (!isRunning) {
         resetTimerToCurrentMode();
     }
 };
 
-// Dùng event 'input' thay vì 'change' để cập nhật nhanh hơn
 studyHourInput.addEventListener('input', handleSettingsChange);
 studyMinuteInput.addEventListener('input', handleSettingsChange);
 shortBreakInput.addEventListener('input', handleSettingsChange);
@@ -807,26 +742,23 @@ totalCyclesInput.addEventListener('input', handleSettingsChange);
 // Modal Buttons Events
 // 1. Settings Restore
 btnRestoreSettings.onclick = () => {
-    // Nếu có session cũ, chuyển sang hỏi khôi phục session
-    if (pendingRestore.session) {
-        settingsRestoreModalEl.style.display = 'none';
-        showVideoRestorePhase();
+    settingsRestoreModalEl.style.display = 'none';
+    if (pendingRestore?.session) {
+        showVideoRestorePhase(); // Chuyển sang hỏi Video
     } else {
         closeAllModalsAndClearSession();
     }
 };
 
 btnSkipSettings.onclick = () => {
-    // Bỏ qua settings cũ, dùng settings hiện tại trên giao diện
-    // (Settings hiện tại là mặc định hoặc đã được người dùng chỉnh)
     settingsRestoreModalEl.style.display = 'none';
 
-    // Đặt lại thời gian theo setting mới nhất
+    // Đặt lại thời gian theo setting hiện tại (Không phải setting cũ)
     calculateTimerSettings();
     resetTimerToCurrentMode();
 
-    if (pendingRestore.session) {
-        showVideoRestorePhase();
+    if (pendingRestore?.session) {
+        showVideoRestorePhase(); // Chuyển sang hỏi Video
     } else {
         closeAllModalsAndClearSession();
     }
@@ -840,25 +772,27 @@ btnRestoreVideo.onclick = (e) => {
     const wasPlaying = e.target.dataset.play === 'true'; 
     
     if (player && currentPlaylist.length > index) {
-        // Khôi phục video và play/pause đúng trạng thái đã lưu
         playVideoAtIndex(index, wasPlaying, startTime);
+    } else if (currentPlaylist.length > index) { 
+        // Nếu player chưa tạo, tạo player với session cũ
+        const videoId = currentPlaylist[index].id;
+        createPlayer(videoId, startTime);
+        if(!wasPlaying) player.pauseVideo();
     }
     
-    // Đóng Modal Video và chuyển sang hỏi Timer
     videoRestoreModalEl.style.display = 'none';
-    showTimerRestorePhase(); 
+    showTimerRestorePhase(); // Chuyển sang hỏi Timer
 };
 
 btnSkipVideo.onclick = () => {
     // Nếu có playlist, load video đầu tiên (hoặc hiện tại) nhưng không play, từ đầu.
     if (currentPlaylist.length > 0) {
         if (currentTrackIndex === -1) currentTrackIndex = 0;
-        playVideoAtIndex(currentTrackIndex, false, 0); // Load video từ đầu, không play
+        playVideoAtIndex(currentTrackIndex, false, 0); 
     }
     
-    // Đóng Modal Video và chuyển sang hỏi Timer
     videoRestoreModalEl.style.display = 'none';
-    showTimerRestorePhase(); 
+    showTimerRestorePhase(); // Chuyển sang hỏi Timer
 };
 
 // 3. Timer Restore
@@ -868,7 +802,6 @@ btnRestoreTimer.onclick = () => {
     timeLeft = timer.timeLeft;
     cycleCount = timer.cycleCount;
     
-    // Đảm bảo settings đã được load/khôi phục từ settings modal
     calculateTimerSettings(); 
     
     // Đặt lại initialTime cho Progress Circle
@@ -898,8 +831,7 @@ btnSkipTimer.onclick = () => {
 const init = () => {
     loadTheme();
     loadPlaylist();
-    renderPlaylist(); // Render playlist trước khi load player
-
+    
     // Load Session Restore (Video + Timer)
     const savedSession = sessionStorage.getItem(SESSION_KEY);
     if (savedSession) {
@@ -909,17 +841,18 @@ const init = () => {
     
     // Load Settings Restore (Sẽ set pendingRestore.settings nếu có)
     loadSettings();
-    
-    // Nếu đã load xong settings và session, onYouTubeIframeAPIReady sẽ gọi checkRestoreStatus()
-    if (typeof YT === 'undefined' || !YT.Player) {
-        // Nếu YT API chưa sẵn sàng, onYouTubeIframeAPIReady sẽ lo việc này
-    } else {
-        // Nếu YT API đã sẵn sàng (trường hợp hiếm)
-        checkRestoreStatus(); 
-    }
+
+    // Sửa lỗi: Cần render playlist trước để đảm bảo DOM có đủ các li
+    renderPlaylist(); 
     
     // Đảm bảo thời gian hiển thị ban đầu đúng (dựa trên settings mới nhất)
     resetTimerToCurrentMode();
+
+    // Logic khôi phục được xử lý sau khi YouTube API sẵn sàng (onYouTubeIframeAPIReady)
+    // Nếu không có YT API, ta vẫn cần chạy checkRestoreStatus để hỏi về settings/timer
+    if (typeof YT !== 'undefined' && YT.Player) {
+        checkRestoreStatus();
+    }
 };
 
 // Chạy Init (Bắt đầu chương trình)
