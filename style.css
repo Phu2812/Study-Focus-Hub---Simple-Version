@@ -201,10 +201,9 @@ header h1 {
     background-color: #5d6878;
 }
 
-/* Settings Grid (FIX LỖI CẤU TRÚC) */
+/* FIX LỖI 2: Settings Grid */
 .settings-grid {
     display: grid;
-    /* FIX: Chia thành 3 cột đều nhau */
     grid-template-columns: repeat(3, 1fr); 
     gap: 15px;
     padding: 15px;
@@ -249,7 +248,7 @@ header h1 {
     box-shadow: var(--shadow-main);
 }
 
-/* FIX LỖI GIAO DIỆN VIDEO: Buộc iframe YouTube lấp đầy khung chứa */
+/* Buộc iframe YouTube lấp đầy khung chứa */
 #youtube-player,
 #player-placeholder {
     position: absolute;
@@ -335,10 +334,19 @@ header h1 {
     background-color: #333;
 }
 
+/* DARK MODE: Video đang chọn */
 .playlist-list li.current-track {
     border-left-color: var(--color-primary);
-    background-color: #333;
+    background-color: #333; /* Nền tối, đảm bảo chữ màu sáng */
     font-weight: bold;
+    color: var(--text-main); /* Màu chữ sáng */
+}
+
+/* FIX LỖI 3: LIGHT MODE: Video đang chọn (Đảm bảo độ tương phản) */
+body.light-mode .playlist-list li.current-track {
+    background-color: #e0e0e0; /* Nền xám nhạt */
+    color: var(--text-main); /* Chữ màu tối */
+    border-left-color: var(--color-primary);
 }
 
 .playlist-list li span {
@@ -348,6 +356,8 @@ header h1 {
     text-overflow: ellipsis;
     margin-right: 15px;
     cursor: pointer;
+    /* FIX LỖI 3: Đảm bảo màu chữ kế thừa từ li.current-track (color: inherit) để có độ tương phản đúng */
+    color: inherit; 
 }
 
 .btn-delete {
@@ -472,8 +482,8 @@ header h1 {
         /* Chuyển về 2 cột trên màn hình nhỏ */
         grid-template-columns: repeat(2, 1fr); 
     }
-    /* Đảm bảo Nghỉ Ngắn/Dài/Chu Kỳ ở hàng mới (chia 2 cột) */
-    #short-break-container, #long-break-container, #total-cycles-container {
+    /* Đảm bảo tất cả các mục nằm trong lưới 2 cột */
+    .setting-item {
         grid-column: span 1;
     }
 }
