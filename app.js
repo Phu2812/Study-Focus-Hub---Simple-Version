@@ -341,7 +341,7 @@ const resetTimerToCurrentMode = () => {
 
 const switchMode = async (autoStartNext = true) => {
     // 1. Dừng Timer và Video
-    pauseTimer(false); // Dừng Interval
+    pauseTimer(false); 
     
     // **FIX LỖI 1 (Chồng âm thanh): Dừng video YouTube ngay lập tức**
     if (player && player.pauseVideo) {
@@ -351,7 +351,7 @@ const switchMode = async (autoStartNext = true) => {
     // 2. Phát và chờ báo thức kết thúc (3 giây + Fade Out)
     await fadeAlarm(true); // <--- Chờ alarm xong hoàn toàn (3s + fade out)
     
-    // **YÊU CẦU MỚI: Tự động phát lại video sau khi báo thức xong**
+    // 3. Tự động phát lại video sau khi báo thức xong
     if (player && currentPlaylist.length > 0 && player.playVideo) {
         // Chỉ phát lại nếu video đang ở trạng thái dừng (Paused)
         if (player.getPlayerState() === YT.PlayerState.PAUSED) {
@@ -359,8 +359,7 @@ const switchMode = async (autoStartNext = true) => {
         }
     }
 
-
-    // 3. Chuyển Mode và Cập nhật Chu kỳ 
+    // 4. Chuyển Mode và Cập nhật Chu kỳ 
     if (currentMode === 'study') {
         cycleCount++;
         if (cycleCount % timerSettings.totalCycles === 0) {
@@ -372,10 +371,10 @@ const switchMode = async (autoStartNext = true) => {
         currentMode = 'study';
     }
 
-    // 4. Reset và Cập nhật hiển thị
+    // 5. Reset và Cập nhật hiển thị
     resetTimerToCurrentMode(); 
     
-    // 5. Tự động bắt đầu mode mới
+    // 6. Tự động bắt đầu mode mới (Có thể bị bỏ qua nếu gọi switchMode(false))
     if (autoStartNext) {
         startTimer();
     }
@@ -830,7 +829,8 @@ startPauseBtn.addEventListener('click', () => {
 });
 
 document.getElementById('btn-reset').addEventListener('click', resetTimer);
-skipBtn.addEventListener('click', () => switchMode(false)); // Bỏ qua mode hiện tại, không tự động chạy mode mới
+skipBtn.addEventListener('click', () => switchMode()); // Tự động bắt đầu timer mới
+
 
 // Settings Events
 settingsInputs.forEach(input => { 
@@ -1003,3 +1003,4 @@ const init = () => {
 };
 
 init();
+
