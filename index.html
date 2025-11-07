@@ -31,89 +31,91 @@
             <div class="controls">
                 <div class="controls-row-1">
                     <button id="btn-start-pause" class="btn-primary">▶ Bắt Đầu</button>
-                    <button id="btn-reset" class="btn-secondary">🔄 Đặt Lại</button>
-                    <button id="btn-skip" class="btn-secondary">⏩ Bỏ Qua</button>
+                    <button id="btn-reset" class="btn-secondary"><i class="fas fa-redo"></i> Đặt lại</button>
+                    <button id="btn-skip" class="btn-secondary"><i class="fas fa-forward"></i> Bỏ qua</button>
+                </div>
+                <div class="controls-row-2">
+                    <button id="btn-settings" class="btn-secondary"><i class="fas fa-cog"></i> Cài đặt</button>
                 </div>
             </div>
             
-            <div class="settings-title">
-                <i class="fas fa-cog"></i> Cài Đặt Thời Gian
-            </div>
-            
-            <div class="timer-settings"> 
-                
-                <div class="setting-item">
-                    <label for="study-minute">Thời gian Học (Study)</label>
-                    <div class="input-group-inline">
-                        <input type="number" id="study-hour" value="0" min="0" max="24">
-                        <span class="unit-label">giờ</span>
-                        <input type="number" id="study-minute" value="25" min="0" max="59">
-                        <span class="unit-label">phút</span>
-                    </div>
+            <div id="settings-area" class="settings-area">
+                <h3>Cài đặt Timer</h3>
+                <div class="setting-group">
+                    <label>Thời gian Học:</label>
+                    <input type="number" id="study-hour" value="0" min="0" max="59"> giờ
+                    <input type="number" id="study-minute" value="25" min="0" max="59"> phút
                 </div>
-
-                <div class="setting-item">
-                    <label for="short-break">Nghỉ Ngắn (Short Break)</label>
-                    <div class="input-group-inline">
-                        <input type="number" id="short-break" value="5" min="1" max="60">
-                        <span class="unit-label">phút</span>
-                    </div>
+                <div class="setting-group">
+                    <label>Nghỉ Ngắn:</label>
+                    <input type="number" id="short-break" value="5" min="1" max="60"> phút
                 </div>
-
-                <div class="setting-item">
-                    <label for="long-break">Nghỉ Dài (Long Break)</label>
-                    <div class="input-group-inline">
-                        <input type="number" id="long-break" value="15" min="1" max="60">
-                        <span class="unit-label">phút</span>
-                    </div>
+                <div class="setting-group">
+                    <label>Nghỉ Dài:</label>
+                    <input type="number" id="long-break" value="15" min="1" max="60"> phút
                 </div>
-
-                <div class="setting-item">
-                    <label for="total-cycles">Tổng Chu Kỳ (Cycles)</label>
-                    <div class="input-group-inline">
-                        <input type="number" id="total-cycles" value="4" min="1" max="10">
-                        <span class="unit-label">lần</span>
-                    </div>
+                <div class="setting-group">
+                    <label>Chu kỳ (trước Nghỉ Dài):</label>
+                    <input type="number" id="total-cycles" value="4" min="1" max="10"> lần
                 </div>
-                
-            </div>
-            
+                </div>
         </section>
 
-        <section id="player-section" class="card player-card">
-            <h2>🎵 YouTube Player</h2>
+        <section id="video-section" class="card video-card">
+            <h2>YouTube Video</h2>
+            <div id="youtube-player"></div>
+            <div id="player-placeholder" class="player-placeholder">
+                <i class="fab fa-youtube"></i>
+                <p>Thêm link YouTube để bắt đầu</p>
+            </div>
             
-            <div class="player-embed-container">
-                <div id="youtube-player" class="player-embed"></div> 
-                <div class="placeholder" id="player-placeholder">Vui lòng thêm bài hát vào Playlist</div> 
+            <div class="player-controls">
+                <button id="btn-prev" class="btn-icon"><i class="fas fa-backward"></i></button>
+                <button id="btn-play-pause" class="btn-icon"><i class="fas fa-play"></i></button>
+                <button id="btn-next" class="btn-icon"><i class="fas fa-forward"></i></button>
             </div>
 
-            <div class="player-controls">
-                <button id="btn-prev" class="btn-secondary"><i class="fas fa-step-backward"></i></button>
-                <button id="btn-play-pause" class="btn-primary"><i class="fas fa-play"></i></button>
-                <button id="btn-next" class="btn-secondary"><i class="fas fa-step-forward"></i></button>
+            <div class="playlist-add-area">
+                <input type="text" id="youtube-url" placeholder="Dán link YouTube vào đây">
+                <button id="btn-add-song" class="btn-primary"><i class="fas fa-plus"></i> Thêm</button>
             </div>
+            <p id="playlist-error" class="error-message"></p>
         </section>
 
         <section id="playlist-section" class="card playlist-card">
-            <h2>🎧 Quản Lý Playlist (Kéo & Thả)</h2>
-            <div class="input-group">
-                <input type="text" id="youtube-url" placeholder="Dán link YouTube (URL) vào đây...">
-                <button id="btn-add-song" class="btn-primary">Thêm</button>
-            </div>
-            <p id="playlist-error" class="error-message"></p>
-            <ul id="playlist-list" class="playlist-list">
-            </ul>
+            <h2>Playlist (${0})</h2>
+            <ul id="playlist-list">
+                </ul>
         </section>
     </main>
     
+    <div id="settings-restore-modal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close-settings">&times;</span>
+            <h3 class="modal-title">Khôi phục Cài đặt?</h3>
+            <p>Phát hiện cài đặt thời gian tùy chỉnh đã lưu từ lần trước!</p>
+            <div class="restore-info-box">
+                <i class="fas fa-cog"></i>
+                <div id="settings-restore-info"></div>
+            </div>
+            <div class="modal-actions">
+                <button id="btn-restore-settings" class="btn-primary">
+                    <i class="fas fa-check"></i> Áp dụng Cài đặt cũ
+                </button>
+                <button id="btn-skip-settings" class="btn-secondary">
+                    <i class="fas fa-times"></i> Giữ Cài đặt hiện tại
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div id="video-restore-modal" class="modal">
         <div class="modal-content">
             <span class="modal-close-video">&times;</span>
             <h3 class="modal-title">Khôi phục Video?</h3>
-            <p>Phát hiện video đang phát dang dở!</p>
+            <p>Phát hiện video đang phát dở từ lần trước!</p>
             <div class="restore-info-box">
-                <i class="fas fa-video"></i>
+                <i class="fab fa-youtube"></i>
                 <div id="video-restore-info"></div>
             </div>
             <div class="modal-actions">
@@ -146,29 +148,9 @@
             </div>
         </div>
     </div>
-    
-    <div id="settings-restore-modal" class="modal">
-        <div class="modal-content">
-            <span class="modal-close-settings">&times;</span>
-            <h3 class="modal-title">Khôi phục Cài đặt?</h3>
-            <p>Phát hiện cài đặt thời gian tùy chỉnh đã lưu từ lần trước!</p>
-            <div class="restore-info-box">
-                <i class="fas fa-cog"></i>
-                <div id="settings-restore-info"></div>
-            </div>
-            <div class="modal-actions">
-                <button id="btn-restore-settings" class="btn-primary">
-                    <i class="fas fa-check"></i> Áp dụng Cài đặt cũ
-                </button>
-                <button id="btn-skip-settings" class="btn-secondary">
-                    <i class="fas fa-times"></i> Giữ Cài đặt hiện tại
-                </button>
-            </div>
-        </div>
-    </div>
 
     <audio id="alarm-sound" src="sounds/alarm.mp3"></audio>
-    
+
     <script src="app.js"></script>
 </body>
 </html>
