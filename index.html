@@ -11,6 +11,7 @@
 </head>
 <body>
     <header>
+        <button id="theme-toggle" class="btn-icon"><i class="fas fa-sun"></i></button>
         <h1>🧠 Study Focus Hub</h1>
         <p>Pomodoro Timer và YouTube Playlist</p>
     </header>
@@ -141,7 +142,27 @@
             </div>
         </div>
     </div>
-
+    
+    <div id="settings-restore-modal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close-settings">&times;</span>
+            <h3 class="modal-title">Khôi phục Cài đặt?</h3>
+            <p>Phát hiện cài đặt thời gian tùy chỉnh đã lưu từ lần trước!</p>
+            <div class="restore-info-box">
+                <i class="fas fa-cog"></i>
+                <div id="settings-restore-info"></div>
+            </div>
+            <div class="modal-actions">
+                <button id="btn-restore-settings" class="btn-primary">
+                    <i class="fas fa-check"></i> Áp dụng Cài đặt cũ
+                </button>
+                <button id="btn-skip-settings" class="btn-secondary">
+                    <i class="fas fa-times"></i> Giữ Cài đặt hiện tại
+                </button>
+            </div>
+        </div>
+    </div>
+    
     <audio id="alarm-sound" src="sounds/alarm.mp3" preload="auto"></audio>
     
     <script src="app.js"></script>
