@@ -38,7 +38,7 @@ const skipBtn = document.getElementById('btn-skip');
 const alarmSound = document.getElementById('alarm-sound');
 const timerCardEl = document.getElementById('timer-section');
 
-// Modal Elements (Đã Tách Biệt)
+// Modal Elements
 const videoRestoreModalEl = document.getElementById('video-restore-modal');
 const timerRestoreModalEl = document.getElementById('timer-restore-modal');
 
@@ -94,9 +94,11 @@ const savePlaylist = () => {
 // =======================================================
 
 const saveSession = () => {
+    // Chỉ lưu khi timer đang chạy hoặc có playlist để khôi phục
     if (isRunning || currentPlaylist.length > 0) {
         let videoTime = 0;
-        let playerState = 0;
+        let playerState = -1; // -1: unstarted
+
         if (player && typeof player.getCurrentTime === 'function') {
             videoTime = Math.floor(player.getCurrentTime());
             playerState = player.getPlayerState();
@@ -112,7 +114,7 @@ const saveSession = () => {
             player: {
                 currentTrackIndex,
                 videoCurrentTime: videoTime,
-                wasPlaying: playerState === 1 // Kiểm tra nếu đang phát
+                wasPlaying: playerState === 1 // 1 là trạng thái đang phát
             }
         };
         localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
@@ -142,11 +144,7 @@ const closeAllModalsAndClearSession = () => {
         initDefaultState();
     }
     // Nếu chưa có video nào được chọn để play, cue video đầu tiên (nếu có)
-    if (currentPlaylist.length > 0 && currentTrackIndex === -1 && player) {
-        currentTrackIndex = 0;
-        player.cueVideoById(currentPlaylist[currentTrackIndex].videoId);
-        renderPlaylist();
-    }
+    // Logic này được gọi lại trong initDefaultState nếu cần thiết
 };
 
 const initDefaultState = () => {
@@ -176,13 +174,15 @@ const showRestoreModal = () => {
 };
 
 const showVideoRestorePhase = () => {
+    // Lấy dữ liệu Timer để chuẩn bị cho Modal Timer (sẽ dùng ở bước sau)
     const { currentMode: savedMode, timeLeft: savedTime, cycleCount: savedCycles } = pendingRestore.timer;
+    // Lấy dữ liệu Video
     const { currentTrackIndex: savedIndex, videoCurrentTime: savedVTime } = pendingRestore.player;
     
     const currentVideo = currentPlaylist[savedIndex];
     const hasVideoData = currentVideo && savedIndex !== -1;
 
-    // Chuẩn bị Timer Info để hiển thị trong Modal Timer (cho bước sau)
+    // Chuẩn bị Timer Info
     const timeFormatted = formatTime(savedTime);
     const modeName = savedMode === 'study' ? 'TẬP TRUNG HỌC' : 
                      (savedMode === 'shortBreak' ? 'NGHỈ NGẮN' : 'NGHỈ DÀI');
@@ -198,9 +198,9 @@ const showVideoRestorePhase = () => {
         btnRestoreVideo.dataset.play = pendingRestore.player.wasPlaying; 
         
         videoRestoreModalEl.style.display = 'flex';
-        timerRestoreModalEl.style.display = 'none'; // Đảm bảo Modal Timer đóng
+        timerRestoreModalEl.style.display = 'none'; 
     } else {
-        // 2. Nếu không có video, chuyển thẳng sang Modal Timer
+        // 2. Nếu không có video để khôi phục (hoặc index = -1), chuyển thẳng sang Modal Timer
         showTimerRestorePhase();
     }
 };
@@ -212,9 +212,9 @@ const showTimerRestorePhase = () => {
     if (savedTime > 0) {
         // Hiển thị Modal Timer
         timerRestoreModalEl.style.display = 'flex';
-        videoRestoreModalEl.style.display = 'none'; // Đảm bảo Modal Video đóng
+        videoRestoreModalEl.style.display = 'none'; 
     } else {
-        // Hết dữ liệu để khôi phục (Video đã xong/skip, Timer = 0)
+        // Hết dữ liệu để khôi phục (Timer = 0)
         closeAllModalsAndClearSession();
     }
 };
@@ -399,14 +399,16 @@ document.getElementById('btn-reset').addEventListener('click', () => {
 
 document.querySelectorAll('.settings-group input').forEach(input => { 
     input.addEventListener('change', (e) => {
+        const value = parseInt(e.target.value) || 0;
+        
         if (e.target.id === 'setting-study-hour' || e.target.id === 'setting-study-minute') {
             updateStudyTimeSetting();
         } else if (e.target.id === 'setting-total-cycles') {
-            timerSettings.totalCycles = parseInt(e.target.value || 1);
+            timerSettings.totalCycles = value;
             updateDisplay();
         } else {
-            const name = e.target.id.replace('setting-', '');
-            timerSettings[name] = parseInt(e.target.value || 1) * 60; 
+            const name = e.target.id.replace('setting-', '').replace('-break', ''); // short, long
+            timerSettings[name] = value * 60; 
             
             if (!isRunning && currentMode.toLowerCase().includes(name.toLowerCase())) { 
                 timeLeft = timerSettings[name];
@@ -452,10 +454,15 @@ const onPlayerReady = (event) => {
     playPauseIcon.classList.add('fa-play');
 
     if (currentPlaylist.length > 0) {
-        if (currentTrackIndex === -1) {
+        if (currentTrackIndex === -1 && !pendingRestore) {
             currentTrackIndex = 0;
+            player.cueVideoById(currentPlaylist[currentTrackIndex].videoId); 
+        } else if (currentTrackIndex === -1 && pendingRestore) {
+             // Không làm gì, chờ modal khôi phục xử lý
+        } else {
+            // Đã có index, cue video hiện tại (trạng thái cue này sẽ bị ghi đè bởi modal khôi phục nếu được chấp nhận)
+            player.cueVideoById(currentPlaylist[currentTrackIndex].videoId); 
         }
-        player.cueVideoById(currentPlaylist[currentTrackIndex].videoId); 
         renderPlaylist(); 
     }
 };
@@ -481,38 +488,25 @@ const playVideoAtIndex = (index, forcePlay = true, startTime = 0) => {
     const videoId = currentPlaylist[index].videoId;
     currentTrackIndex = index;
     
-    // Sử dụng loadVideoById để đảm bảo video được tải đúng thời điểm bắt đầu
     player.loadVideoById({
         videoId: videoId,
         startSeconds: startTime, 
         suggestedQuality: 'small',
-        autoplay: 0 
+        autoplay: forcePlay ? 1 : 0 // Set autoplay = 1 để buộc play
     }); 
     
     renderPlaylist(); 
 
+    // Nếu forcePlay là true, chúng ta buộc nó play ngay lập tức.
     if (forcePlay) {
-         // FIX LỖI CRITICAL: Chờ player sẵn sàng trước khi gọi playVideo()
-         let attempts = 0;
-         const maxAttempts = 10; // Thử trong tối đa 10 * 100ms = 1 giây
-         
-         const tryPlay = () => {
-             const state = player.getPlayerState();
-             if (state === 1) return; // Đã chơi, kết thúc
-
-             if (state === 3 || state === 5 || state === 2) { // Buffering, Cued, hoặc Paused - Sẵn sàng để chơi
+         // Fix lỗi: Đôi khi player.playVideo() không hoạt động ngay lập tức sau loadVideoById.
+         // Tuy nhiên, việc đặt autoplay: 1 trong loadVideoById đã xử lý hầu hết trường hợp.
+         // Ta thêm một check để đảm bảo
+         setTimeout(() => {
+             if (player.getPlayerState() !== 1) {
                  player.playVideo();
-                 return;
              }
-             if (attempts < maxAttempts) {
-                 attempts++;
-                 setTimeout(tryPlay, 100);
-             } else {
-                 console.warn("Không thể buộc video phát sau 1 giây. Trạng thái:", state);
-             }
-         };
-         
-         setTimeout(tryPlay, 100); // Bắt đầu kiểm tra sau 100ms
+         }, 500); // Đợi 0.5s để player ổn định
     }
 };
 
@@ -582,7 +576,7 @@ document.getElementById('btn-add-song').addEventListener('click', async () => {
     urlInputEl.value = '';
 
     if (wasEmpty && player) {
-        // Tự động play khi thêm bài đầu tiên
+        // Tự động cue/play khi thêm bài đầu tiên
         playVideoAtIndex(0, true); 
     }
 });
@@ -715,26 +709,18 @@ const init = () => {
     }
 };
 
-// --- FIX LỖI X VÀ CLICK NGOÀI ---
+// --- XỬ LÝ NÚT BẤM VÀ DẤU X (Tuần tự) ---
 
 // 1. Dấu X Modal Video = Bỏ qua Video -> Chuyển sang Timer
 videoCloseBtn.onclick = () => { 
-    btnSkipVideo.onclick();
+    btnSkipVideo.click(); // Giả lập click vào nút Bỏ qua Video
 }; 
 
 // 2. Dấu X Modal Timer = Bỏ qua Timer -> Đóng và clear session
 timerCloseBtn.onclick = () => { 
-    btnSkipTimer.onclick();
+    btnSkipTimer.click(); // Giả lập click vào nút Bắt đầu Timer mới
 }; 
 
-// 3. Click ra ngoài: KHÔNG LÀM GÌ. (Bỏ qua xử lý window.onclick)
-window.onclick = (event) => {
-    // Chỉ đóng modal khi click chính xác vào nút X, không đóng khi click vào nền overlay
-    // Logic này được để trống theo yêu cầu: click ra ngoài không thực hiện hành động gì
-};
-
-
-// --- XỬ LÝ NÚT BẤM (Tuần tự) ---
 
 // 1. Event Khôi phục Video (Modal Video)
 btnRestoreVideo.onclick = (e) => {
