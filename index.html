@@ -40,28 +40,32 @@
             </div>
             
             <div id="settings-area" class="settings-area">
-                <h3>⚙️ Cài đặt Timer</h3>
+                <h3 class="settings-title">⚙️ Cài đặt Timer</h3>
+                
                 <div class="setting-group">
-                    <label>Thời gian Học:</label>
+                    <label for="study-hour">Thời gian Học:</label>
                     <div class="input-inline">
                         <input type="number" id="study-hour" value="0" min="0" max="59"> <span>giờ</span>
                         <input type="number" id="study-minute" value="25" min="0" max="59"> <span>phút</span>
                     </div>
                 </div>
+                
                 <div class="setting-group">
-                    <label>Nghỉ Ngắn:</label>
+                    <label for="short-break">Nghỉ Ngắn:</label>
                     <div class="input-inline">
                         <input type="number" id="short-break" value="5" min="1" max="60"> <span>phút</span>
                     </div>
                 </div>
+                
                 <div class="setting-group">
-                    <label>Nghỉ Dài:</label>
+                    <label for="long-break">Nghỉ Dài:</label>
                     <div class="input-inline">
                         <input type="number" id="long-break" value="15" min="1" max="60"> <span>phút</span>
                     </div>
                 </div>
+                
                 <div class="setting-group">
-                    <label>Chu kỳ (trước Nghỉ Dài):</label>
+                    <label for="total-cycles">Chu kỳ (trước Nghỉ Dài):</label>
                     <div class="input-inline">
                         <input type="number" id="total-cycles" value="4" min="1" max="10"> <span>lần</span>
                     </div>
@@ -82,16 +86,17 @@
                 <button id="btn-play-pause" class="btn-icon"><i class="fas fa-play"></i></button>
                 <button id="btn-next" class="btn-icon"><i class="fas fa-forward"></i></button>
             </div>
+        </section>
 
-            <div class="playlist-add-area">
+        <section id="playlist-section" class="card playlist-card">
+            <h2>Playlist (<span id="playlist-count">0</span>)</h2>
+            
+            <div class="playlist-add-area top-input">
                 <input type="text" id="youtube-url" placeholder="Dán link YouTube vào đây">
                 <button id="btn-add-song" class="btn-primary"><i class="fas fa-plus"></i> Thêm</button>
             </div>
             <p id="playlist-error" class="error-message"></p>
-        </section>
 
-        <section id="playlist-section" class="card playlist-card">
-            <h2>Playlist (${0})</h2>
             <ul id="playlist-list">
                 </ul>
         </section>
