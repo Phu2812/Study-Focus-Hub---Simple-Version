@@ -96,7 +96,7 @@ const savePlaylist = () => {
 const saveSession = () => {
     if (isRunning || currentPlaylist.length > 0) {
         let videoTime = 0;
-        let playerState = -1; 
+        let playerState = 0; 
 
         if (player && typeof player.getCurrentTime === 'function') {
             videoTime = Math.floor(player.getCurrentTime());
@@ -140,13 +140,19 @@ const closeAllModalsAndClearSession = () => {
     if (!isRunning) {
         initDefaultState();
     }
+    // Nếu chưa có video nào được chọn để play, cue video đầu tiên (nếu có)
+    if (currentPlaylist.length > 0 && currentTrackIndex === -1 && player) {
+        currentTrackIndex = 0;
+        player.cueVideoById(currentPlaylist[currentTrackIndex].videoId);
+        renderPlaylist();
+    }
 };
 
 const initDefaultState = () => {
     clearInterval(intervalId);
     isRunning = false;
     currentMode = 'study';
-    updateTimerSettings(); // Cập nhật lại thời gian theo cài đặt input
+    updateTimerSettings(); // Dùng hàm unified để lấy giá trị cài đặt mới nhất
     cycleCount = 0;
     startPauseBtn.textContent = '▶ Bắt Đầu';
     updateDisplay();
@@ -248,19 +254,24 @@ const updateDisplay = () => {
 };
 
 /**
+ * Lấy giây từ input Giờ/Phút của một chế độ
+ */
+const getSecondsFromInputs = (mode) => {
+    const hourInput = document.getElementById(`setting-${mode}-hour`);
+    const minuteInput = document.getElementById(`setting-${mode}-minute`);
+    
+    const hours = parseInt(hourInput.value || 0);
+    const minutes = parseInt(minuteInput.value || 0);
+    
+    return (hours * 3600) + (minutes * 60);
+}
+
+
+/**
  * Lấy giá trị từ input Giờ/Phút/Chu kỳ và cập nhật lại timerSettings.
+ * CHỈ reset timeLeft về giá trị đầy đủ nếu Timer đang dừng (!isRunning).
  */
 const updateTimerSettings = () => {
-    
-    const getSecondsFromInputs = (mode) => {
-        const hourInput = document.getElementById(`setting-${mode}-hour`);
-        const minuteInput = document.getElementById(`setting-${mode}-minute`);
-        
-        const hours = parseInt(hourInput.value || 0);
-        const minutes = parseInt(minuteInput.value || 0);
-        
-        return (hours * 3600) + (minutes * 60);
-    }
     
     // Cập nhật 3 chế độ
     timerSettings.study = Math.max(60, getSecondsFromInputs('study')); 
@@ -272,11 +283,13 @@ const updateTimerSettings = () => {
     timerSettings.totalCycles = Math.max(1, totalCycles);
     
     // Nếu timer đang dừng, cập nhật lại timeLeft theo chế độ hiện tại
+    // Điều kiện này ngăn việc reset timeLeft khi bấm Start/Pause
     if (!isRunning) {
         timeLeft = timerSettings[currentMode];
         updateDisplay();
     }
 };
+
 
 const fadeAlarm = (isFadeIn, callback) => {
     alarmSound.volume = isFadeIn ? 0 : 1;
@@ -390,7 +403,8 @@ const startTimer = () => {
 
 // Events cho Pomodoro
 startPauseBtn.addEventListener('click', () => {
-    updateTimerSettings(); 
+    // FIX BUG: Xóa lệnh gọi cập nhật settings để tránh việc reset timeLeft khi resume.
+    // updateTimerSettings(); // LỆNH GỌI NÀY ĐÃ BỊ XÓA
     
     isRunning = !isRunning;
     if (isRunning) {
@@ -490,17 +504,32 @@ const playVideoAtIndex = (index, forcePlay = true, startTime = 0) => {
         videoId: videoId,
         startSeconds: startTime, 
         suggestedQuality: 'small',
-        autoplay: forcePlay ? 1 : 0 
+        autoplay: 0 // luôn đặt 0, sau đó dùng tryPlay
     }); 
     
     renderPlaylist(); 
 
     if (forcePlay) {
-         setTimeout(() => {
-             if (player.getPlayerState() !== 1) {
+         let attempts = 0;
+         const maxAttempts = 10; 
+         
+         const tryPlay = () => {
+             const state = player.getPlayerState();
+             if (state === 1) return; // Đã chơi, kết thúc
+
+             if (state === 3 || state === 5 || state === 2) { // Buffering, Cued, hoặc Paused - Sẵn sàng để chơi
                  player.playVideo();
+                 return;
              }
-         }, 500); 
+             if (attempts < maxAttempts) {
+                 attempts++;
+                 setTimeout(tryPlay, 100);
+             } else {
+                 console.warn("Không thể buộc video phát sau 1 giây. Trạng thái:", state);
+             }
+         };
+         
+         setTimeout(tryPlay, 100); 
     }
 };
 
@@ -687,10 +716,11 @@ function handleDrop(e) {
 
 const init = () => {
     loadPlaylist();
-    updateTimerSettings(); // Cập nhật cài đặt ban đầu
+    updateTimerSettings(); 
     renderPlaylist();
     updateDisplay();
     
+    // Yêu cầu quyền truy cập Notification nếu chưa có
     if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
         Notification.requestPermission();
     }
@@ -701,8 +731,8 @@ const init = () => {
 };
 
 // --- XỬ LÝ NÚT BẤM MODAL ---
-videoCloseBtn.onclick = () => { btnSkipVideo.click(); }; 
-timerCloseBtn.onclick = () => { btnSkipTimer.click(); }; 
+videoCloseBtn.onclick = () => { btnSkipVideo.onclick(); }; 
+timerCloseBtn.onclick = () => { btnSkipTimer.onclick(); }; 
 
 btnRestoreVideo.onclick = (e) => {
     const startTime = parseInt(e.target.dataset.time);
