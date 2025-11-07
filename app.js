@@ -94,7 +94,7 @@ const savePlaylist = () => {
 // =======================================================
 
 const saveSession = () => {
-    if (isRunning || currentPlaylist.length > 0) {
+    if (isRunning || currentPlaylist.length > 0 || timeLeft < timerSettings[currentMode]) {
         let videoTime = 0;
         let playerState = 0; 
 
@@ -140,7 +140,6 @@ const closeAllModalsAndClearSession = () => {
     if (!isRunning) {
         initDefaultState();
     }
-    // Nếu chưa có video nào được chọn để play, cue video đầu tiên (nếu có)
     if (currentPlaylist.length > 0 && currentTrackIndex === -1 && player) {
         currentTrackIndex = 0;
         player.cueVideoById(currentPlaylist[currentTrackIndex].videoId);
@@ -152,7 +151,7 @@ const initDefaultState = () => {
     clearInterval(intervalId);
     isRunning = false;
     currentMode = 'study';
-    updateTimerSettings(); // Dùng hàm unified để lấy giá trị cài đặt mới nhất
+    updateTimerSettings(); // Cập nhật lại thời gian theo cài đặt input
     cycleCount = 0;
     startPauseBtn.textContent = '▶ Bắt Đầu';
     updateDisplay();
@@ -221,7 +220,6 @@ const showTimerRestorePhase = () => {
 
 /**
  * Định dạng thời gian (giây) thành chuỗi H:MM:SS hoặc MM:SS.
- * Nếu giờ = 0, chỉ hiển thị MM:SS.
  */
 const formatTime = (totalSeconds) => {
     const hours = Math.floor(totalSeconds / 3600);
@@ -263,7 +261,9 @@ const getSecondsFromInputs = (mode) => {
     const hours = parseInt(hourInput.value || 0);
     const minutes = parseInt(minuteInput.value || 0);
     
-    return (hours * 3600) + (minutes * 60);
+    // Đảm bảo thời gian tối thiểu là 1 phút (60 giây) nếu cả giờ và phút đều bằng 0
+    let totalSeconds = (hours * 3600) + (minutes * 60);
+    return Math.max(60, totalSeconds);
 }
 
 
@@ -273,17 +273,16 @@ const getSecondsFromInputs = (mode) => {
  */
 const updateTimerSettings = () => {
     
-    // Cập nhật 3 chế độ
-    timerSettings.study = Math.max(60, getSecondsFromInputs('study')); 
-    timerSettings.shortBreak = Math.max(60, getSecondsFromInputs('short-break'));
-    timerSettings.longBreak = Math.max(60, getSecondsFromInputs('long-break'));
+    // 1. Cập nhật 3 chế độ từ input
+    timerSettings.study = getSecondsFromInputs('study'); 
+    timerSettings.shortBreak = getSecondsFromInputs('short-break');
+    timerSettings.longBreak = getSecondsFromInputs('long-break');
     
-    // Cập nhật chu kỳ
+    // 2. Cập nhật chu kỳ
     const totalCycles = parseInt(document.getElementById('setting-total-cycles').value || 4);
     timerSettings.totalCycles = Math.max(1, totalCycles);
     
-    // Nếu timer đang dừng, cập nhật lại timeLeft theo chế độ hiện tại
-    // Điều kiện này ngăn việc reset timeLeft khi bấm Start/Pause
+    // 3. Cập nhật timeLeft nếu timer đang ở trạng thái dừng
     if (!isRunning) {
         timeLeft = timerSettings[currentMode];
         updateDisplay();
@@ -349,22 +348,20 @@ const switchMode = async (autoStartNext = true) => {
                 
                 if (currentMode === 'study') {
                     cycleCount++;
-                    if (cycleCount >= totalCycles) { 
-                        // Hoàn thành 1 block (4 chu kỳ study/break)
+                    if (cycleCount % totalCycles === 0) { // Kiểm tra nếu là cuối chu kỳ (ví dụ 4/4)
                         currentMode = 'longBreak';
-                        timeLeft = timerSettings.longBreak;
+                        // Đảm bảo lấy thời gian mới nhất
+                        timeLeft = timerSettings.longBreak; 
                     } else {
                         currentMode = 'shortBreak';
-                        timeLeft = timerSettings.shortBreak;
+                        // Đảm bảo lấy thời gian mới nhất
+                        timeLeft = timerSettings.shortBreak; 
                     }
                 } else { 
                     // Sau break (ngắn hoặc dài), quay lại study
                     currentMode = 'study';
+                    // Đảm bảo lấy thời gian mới nhất
                     timeLeft = timerSettings.study;
-                    // Nếu sau long break, reset cycle count
-                    if (cycleCount >= totalCycles) {
-                        cycleCount = 0;
-                    }
                 }
                 
                 updateDisplay();
@@ -392,7 +389,7 @@ const startTimer = () => {
     intervalId = setInterval(() => {
         timeLeft--;
         if (timeLeft <= 0) {
-            updateTimerSettings(); // Cập nhật lại settings trước khi chuyển mode
+            // Không cần gọi updateTimerSettings ở đây, chỉ cần gọi khi cần chuyển mode/reset
             switchMode(true); 
         } else {
             updateDisplay();
@@ -403,8 +400,9 @@ const startTimer = () => {
 
 // Events cho Pomodoro
 startPauseBtn.addEventListener('click', () => {
-    // FIX BUG: Xóa lệnh gọi cập nhật settings để tránh việc reset timeLeft khi resume.
-    // updateTimerSettings(); // LỆNH GỌI NÀY ĐÃ BỊ XÓA
+    // *** FIX LỖI RESET TIMER ***
+    // Đã loại bỏ lệnh gọi updateTimerSettings() khỏi sự kiện này
+    // để tránh reset timeLeft khi resume (isRunning chuyển từ false -> true).
     
     isRunning = !isRunning;
     if (isRunning) {
@@ -417,8 +415,9 @@ startPauseBtn.addEventListener('click', () => {
 });
 
 skipBtn.addEventListener('click', () => {
+    // Gọi updateTimerSettings để đảm bảo thời gian cho mode tiếp theo là mới nhất
+    updateTimerSettings(); 
     if (isRunning || timeLeft > 0) {
-        updateTimerSettings(); // Cập nhật trước khi chuyển mode
         switchMode(true); 
     }
 });
@@ -431,6 +430,7 @@ document.getElementById('btn-reset').addEventListener('click', () => {
 
 // Lắng nghe sự kiện thay đổi trên TẤT CẢ input cài đặt
 document.querySelectorAll('.settings-group input').forEach(input => { 
+    // Gắn updateTimerSettings() trực tiếp vào sự kiện thay đổi input
     input.addEventListener('change', updateTimerSettings);
 });
 
