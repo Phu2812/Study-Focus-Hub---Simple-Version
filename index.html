@@ -40,10 +40,10 @@
             </div>
             
             <div id="settings-area" class="settings-area">
-                <h3>⚙️ Cài đặt Timer</h3>
+                <h3 class="settings-title">⚙️ Cài đặt Timer</h3>
                 
                 <div class="setting-group">
-                    <label for="study-minute">Thời gian Học:</label>
+                    <label for="study-hour">Thời gian Học:</label>
                     <div class="input-inline">
                         <input type="number" id="study-hour" value="0" min="0" max="59"> <span>giờ</span>
                         <input type="number" id="study-minute" value="25" min="0" max="59"> <span>phút</span>
@@ -90,14 +90,15 @@
 
         <section id="playlist-section" class="card playlist-card">
             <h2>Playlist (<span id="playlist-count">0</span>)</h2>
-            <ul id="playlist-list">
-                </ul>
-
-            <div class="playlist-add-area">
+            
+            <div class="playlist-add-area top-input">
                 <input type="text" id="youtube-url" placeholder="Dán link YouTube vào đây">
                 <button id="btn-add-song" class="btn-primary"><i class="fas fa-plus"></i> Thêm</button>
             </div>
             <p id="playlist-error" class="error-message"></p>
+
+            <ul id="playlist-list">
+                </ul>
         </section>
     </main>
     
