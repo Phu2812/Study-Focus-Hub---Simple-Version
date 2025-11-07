@@ -1,7 +1,13 @@
 :root {
-    --bg-dark: #121212; 
+    /* DARK MODE (Mặc định) */
+    --bg-main: #121212; 
     --card-bg: #1f1f1f;
-    --text-light: #f3f4f6;
+    --text-main: #f3f4f6;
+    --text-secondary: #a0a0a0;
+    --input-bg: #2c2c2c;
+    --border-color: #333;
+
+    /* Colors */
     --color-primary: #1e90ff; /* Blue */
     --color-secondary: #4b5563; /* Gray */
     --color-study: #ff6347; /* Tomato */
@@ -9,23 +15,45 @@
     --shadow-main: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
+/* LIGHT MODE */
+body.light-mode {
+    --bg-main: #f0f0f0; 
+    --card-bg: #ffffff;
+    --text-main: #333333;
+    --text-secondary: #666666;
+    --input-bg: #e5e7eb;
+    --border-color: #ddd;
+    --shadow-main: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
 body {
-    background-color: var(--bg-dark);
-    color: var(--text-light);
+    background-color: var(--bg-main);
+    color: var(--text-main);
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
     padding: 20px;
+    transition: background-color 0.3s, color 0.3s;
 }
 
 header {
     text-align: center;
     margin-bottom: 40px;
+    position: relative; /* Để định vị nút toggle */
 }
 
 header h1 {
     font-size: 3.5em;
     font-weight: 900;
     color: var(--color-primary);
+}
+
+/* Nút Toggle Theme */
+#theme-toggle {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    /* Style được định nghĩa dưới phần buttons */
 }
 
 /* ================== LAYOUT ================== */
@@ -39,172 +67,213 @@ header h1 {
     margin: 0 auto;
 }
 
+/* Điều chỉnh lại layout cho màn hình nhỏ */
+@media (max-width: 1000px) {
+    .container {
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
+    header h1 {
+        font-size: 2.5em;
+    }
+}
+
+
 .card {
     background-color: var(--card-bg);
-    padding: 30px;
     border-radius: 12px;
+    padding: 30px;
     box-shadow: var(--shadow-main);
+    transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+.card h2 {
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 10px;
+    margin-top: 0;
+    color: var(--text-main);
+    transition: border-bottom-color 0.3s;
+}
+
+/* ================== TIMER CARD ================== */
+
+.timer-card {
+    grid-row: 1 / 3; /* Chiếm 2 hàng ở cột 1 */
     text-align: center;
 }
 
-.timer-card {
-    grid-column: 1 / 2;
-    grid-row: 1 / 3; 
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    transition: background-color 0.5s;
+/* Cải thiện giao diện Timer */
+#timer-mode {
+    font-size: 1.5em;
+    font-weight: 600;
+    margin-bottom: 20px;
+    border-bottom: none;
+    transition: color 0.3s;
 }
 
-/* ================== TIMER DISPLAY FIX ================== */
-
-/* Khối cố định kích thước hiển thị Timer */
 .timer-display-box {
-    /* Đảm bảo chiều rộng đủ cho format H:MM:SS */
-    width: 280px; 
-    height: 100px;
+    width: 280px;
+    height: 280px;
+    margin: 0 auto 30px;
     display: flex;
     justify-content: center;
     align-items: center;
-    margin: 10px 0 20px 0;
-}
-
-#timer-mode {
-    font-size: 1.5em;
-    font-weight: 700;
-    padding: 5px 15px;
-    border-radius: 8px;
-    transition: background-color 0.3s;
+    border-radius: 50%;
+    border: 15px solid var(--border-color);
+    box-shadow: inset 0 0 25px rgba(0, 0, 0, 0.2);
+    transition: border-color 0.3s, box-shadow 0.3s;
 }
 
 .study-mode {
-    background-color: rgba(255, 99, 71, 0.2);
     color: var(--color-study);
+    border-color: var(--color-study);
+    box-shadow: 0 0 20px rgba(255, 99, 71, 0.3);
 }
 
 .break-mode {
-    background-color: rgba(60, 179, 113, 0.2);
     color: var(--color-break);
+    border-color: var(--color-break);
+    box-shadow: 0 0 20px rgba(60, 179, 113, 0.3);
 }
 
-#countdown {
-    font-size: 5.5em; /* Giảm nhẹ để vừa với Giờ:Phút:Giây */
-    font-weight: 200;
-    letter-spacing: 2px;
+.countdown {
+    font-size: 5em;
+    font-weight: 700;
+    letter-spacing: -2px;
+    color: var(--text-main);
+    transition: color 0.3s;
 }
 
-/* ======================================================= */
-/* CẢI THIỆN BỐ CỤC CÀI ĐẶT (SETTINGS) */
-/* ======================================================= */
+#cycle-info {
+    color: var(--text-secondary);
+    font-size: 1.1em;
+    margin-bottom: 25px;
+}
 
 .settings-title {
-    text-align: center; 
-    margin: 25px 0 15px 0; 
-    padding-top: 15px;
-    border-top: 1px solid #333;
+    margin-top: 35px;
+    margin-bottom: 20px;
     color: var(--color-primary);
-    font-size: 1.5em;
-    width: 100%; 
+    font-size: 1.2em;
+    border-top: 1px solid var(--border-color);
+    padding-top: 15px;
+    text-align: left;
 }
 .settings-title i {
-    margin-right: 10px;
-    color: #4b5563;
+    margin-right: 5px;
 }
 
 .settings-group {
-    width: 90%; 
-    padding: 10px 0;
-    margin-top: 5px;
-    border-bottom: 1px solid #282828; 
+    background-color: var(--input-bg);
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    text-align: left;
+    transition: background-color 0.3s;
 }
 
 .settings-group h4 {
-    font-size: 1em;
-    font-weight: 600;
     margin: 0 0 10px 0;
-    text-align: left;
-    color: #b0b0b0;
-    text-transform: uppercase;
+    color: var(--text-main);
+    font-weight: 500;
 }
 
-/* Hàng chứa input: Dùng Flexbox để căn chỉnh đồng đều */
 .settings-row {
     display: flex;
-    justify-content: space-between;
     align-items: center;
     gap: 10px;
 }
 
-/* Định dạng chung cho label/input trong Settings */
 .settings-row label {
     font-size: 0.9em;
-    color: #a0a0a0;
-    flex-basis: 30%; /* Chiếm 30% cho label */
-    text-align: right;
-    padding-right: 10px;
+    color: var(--text-secondary);
+    min-width: 30px;
 }
 
-.settings-row input {
-    flex-basis: 70%; /* Chiếm 70% cho input */
-    width: 100%;
-    max-width: 80px; 
+.settings-row input[type="number"] {
+    width: 60px;
     padding: 8px;
-    text-align: center;
+    border: 1px solid var(--border-color);
     border-radius: 4px;
-    border: 1px solid #444;
-    background-color: #2c2c2c;
-    color: var(--text-light);
-    font-size: 1em;
-    box-sizing: border-box;
-    margin: 5px 0; /* Giảm khoảng cách dọc */
+    background-color: var(--card-bg);
+    color: var(--text-main);
+    text-align: center;
+    transition: background-color 0.3s, border-color 0.3s;
 }
 
-.settings-row input:focus {
-    border-color: var(--color-primary);
-    outline: none;
+.settings-row.single-input input[type="number"] {
+    width: 40px;
 }
 
-/* Nhóm chỉ có 1 input (Total Cycles) */
-.settings-row.single-input {
+/* ================== BUTTONS ================== */
+
+.controls {
+    margin-bottom: 20px;
+}
+
+.controls-row-1 {
+    display: flex;
     justify-content: center;
     gap: 15px;
 }
-.settings-row.single-input label {
-    flex-basis: auto;
-    text-align: left;
-}
-.settings-row.single-input input {
-    flex-basis: auto;
-    max-width: 60px;
+
+.btn-primary, .btn-secondary, .btn-icon {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: 600;
+    transition: background-color 0.2s, transform 0.1s, box-shadow 0.2s;
 }
 
-/* Gỡ bỏ đường kẻ cuối cùng */
-.timer-card .settings-group:last-of-type {
-    border-bottom: none;
+.btn-primary {
+    background-color: var(--color-primary);
+    color: var(--text-main);
+    box-shadow: 0 4px 10px rgba(30, 144, 255, 0.4);
 }
 
-/* ================== PLAYER & PLAYLIST STYLES (Giữ nguyên) ================== */
-
-.player-card {
-    grid-column: 2 / 3;
-    grid-row: 1 / 2;
+.btn-primary:hover {
+    background-color: #1a7bd8;
+    box-shadow: 0 6px 15px rgba(30, 144, 255, 0.6);
+    transform: translateY(-1px);
 }
 
-.playlist-card {
-    grid-column: 2 / 3;
-    grid-row: 2 / 3;
+.btn-secondary {
+    background-color: var(--color-secondary);
+    color: var(--text-main);
 }
+
+.btn-secondary:hover {
+    background-color: #5d6878;
+}
+
+.btn-icon {
+    background: none;
+    color: var(--text-secondary);
+    padding: 10px;
+    font-size: 1.5em;
+}
+
+.btn-icon:hover {
+    color: var(--color-primary);
+}
+
+
+/* ================== PLAYER CARD ================== */
 
 .player-embed-container {
     position: relative;
     width: 100%;
-    padding-top: 56.25%; /* 16:9 Aspect Ratio */
+    padding-bottom: 56.25%; /* Tỉ lệ 16:9 */
+    height: 0;
     margin-bottom: 20px;
     border-radius: 8px;
     overflow: hidden;
+    box-shadow: var(--shadow-main);
 }
 
-#youtube-player {
+.player-embed {
     position: absolute;
     top: 0;
     left: 0;
@@ -218,62 +287,48 @@ header h1 {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: #000;
+    background-color: #333;
     display: flex;
-    align-items: center;
     justify-content: center;
-    color: #888;
+    align-items: center;
+    color: var(--text-secondary);
     font-size: 1.2em;
-    z-index: 10;
 }
 
 .player-controls {
     display: flex;
     justify-content: center;
-    gap: 15px;
-    margin-bottom: 20px;
+    gap: 20px;
+    margin-bottom: 10px;
 }
 
-/* Playlist Input */
+/* ================== PLAYLIST CARD ================== */
+
+.playlist-card {
+    grid-column: 2; /* Chiếm cột 2 */
+}
+
 .input-group {
     display: flex;
     gap: 10px;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
 }
 
-#youtube-url {
+.input-group input[type="text"] {
     flex-grow: 1;
-    padding: 10px;
-    border: 1px solid #333;
-    border-radius: 6px;
-    background-color: #2c2c2c;
-    color: var(--text-light);
-    font-size: 1em;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background-color: var(--input-bg);
+    color: var(--text-main);
+    transition: background-color 0.3s, border-color 0.3s;
 }
 
-.error-message {
-    color: var(--color-study);
-    text-align: left;
-    margin-bottom: 15px;
-    font-weight: bold;
-}
-
-/* Playlist List */
 .playlist-list {
     list-style: none;
     padding: 0;
-    max-height: 250px;
+    max-height: 400px;
     overflow-y: auto;
-    text-align: left;
-}
-
-.playlist-list::-webkit-scrollbar {
-    width: 8px;
-}
-
-.playlist-list::-webkit-scrollbar-thumb {
-    background-color: #444;
-    border-radius: 4px;
 }
 
 .playlist-list li {
@@ -282,10 +337,10 @@ header h1 {
     align-items: center;
     padding: 12px;
     margin-bottom: 8px;
-    background-color: #2c2c2c;
+    background-color: var(--input-bg);
     border-radius: 6px;
     cursor: grab;
-    transition: background-color 0.15s, box-shadow 0.15s;
+    transition: background-color 0.15s, box-shadow 0.15s, border-left 0.3s;
     border-left: 5px solid transparent; 
 }
 
@@ -303,9 +358,13 @@ header h1 {
     background-color: #333;
 }
 
+.light-mode .playlist-list li:hover {
+    background-color: #eee;
+}
+
 .playlist-list li.current-track {
     border-left-color: var(--color-primary);
-    background-color: #333;
+    background-color: var(--card-bg);
     font-weight: bold;
 }
 
@@ -315,107 +374,62 @@ header h1 {
     overflow: hidden;
     text-overflow: ellipsis;
     margin-right: 15px;
-    color: #b0b0b0;
+    color: var(--text-secondary);
     cursor: pointer;
-}
-
-.playlist-list li.current-track span {
-    color: var(--text-light);
 }
 
 .playlist-list li button {
     background: none;
     border: none;
-    color: #e74c3c;
+    color: var(--text-secondary);
     cursor: pointer;
     font-size: 1em;
     padding: 5px;
-    transition: color 0.1s;
+    transition: color 0.2s;
 }
 
 .playlist-list li button:hover {
-    color: #c0392b;
+    color: var(--color-study);
 }
 
-/* ================== BUTTONS ================== */
 
-.btn-primary, .btn-secondary {
-    padding: 10px 20px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: background-color 0.2s, transform 0.1s;
-    border: none;
-    font-size: 1em;
-}
-
-.btn-primary {
-    background-color: var(--color-primary);
-    color: var(--text-light);
-}
-
-.btn-primary:hover {
-    background-color: #1a75e0;
-}
-
-.btn-secondary {
-    background-color: var(--color-secondary);
-    color: var(--text-light);
-}
-
-.btn-secondary:hover {
-    background-color: #5d6677;
-}
-
-.controls-row-1 {
-    display: flex;
-    gap: 15px;
-    margin-top: 20px;
-    justify-content: center;
-}
-
-/* ================== MODAL STYLES (Giữ nguyên) ================== */
+/* ================== MODALS ================== */
 
 .modal {
-    display: none; 
-    position: fixed; 
-    z-index: 100; 
+    display: none;
+    position: fixed;
+    z-index: 100;
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
     overflow: auto;
-    background-color: rgba(0, 0, 0, 0.7); 
-    justify-content: center; 
-    align-items: center;
+    background-color: rgba(0,0,0,0.8); 
+    padding-top: 50px;
 }
 
 .modal-content {
     background-color: var(--card-bg);
+    margin: 10% auto; 
     padding: 30px;
     border-radius: 12px;
-    box-shadow: var(--shadow-main);
     width: 90%; 
-    max-width: 450px; 
-    position: relative;
-    animation-name: animatetop;
-    animation-duration: 0.4s;
+    max-width: 450px;
     text-align: center;
-}
-
-@keyframes animatetop {
-    from {top: -300px; opacity: 0}
-    to {top: 0; opacity: 1}
+    position: relative;
+    box-shadow: var(--shadow-main);
+    transition: background-color 0.3s, box-shadow 0.3s;
 }
 
 .modal-title {
     color: var(--color-primary);
-    font-size: 1.8em;
-    margin-bottom: 10px;
+    margin-top: 0;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
 }
 
-.modal-close-video, .modal-close-timer {
-    color: #aaa;
+.modal-close-video, .modal-close-timer, .modal-close-settings {
+    color: var(--text-secondary);
     float: right;
     font-size: 28px;
     font-weight: bold;
@@ -425,21 +439,20 @@ header h1 {
     cursor: pointer;
 }
 
-.modal-close-video:hover, .modal-close-timer:hover,
-.modal-close-video:focus, .modal-close-timer:focus {
-    color: var(--text-light);
-    text-decoration: none;
+.modal-close-video:hover, .modal-close-timer:hover, .modal-close-settings:hover {
+    color: var(--text-main);
 }
 
 .restore-info-box {
     text-align: left;
     margin: 20px 0;
     padding: 15px;
-    border: 1px dashed #444;
+    border: 1px dashed var(--border-color);
     border-radius: 8px;
-    background-color: #2c2c2c;
+    background-color: var(--input-bg);
     display: flex;
     align-items: center;
+    transition: background-color 0.3s, border-color 0.3s;
 }
 
 .restore-info-box i {
@@ -451,50 +464,14 @@ header h1 {
 #timer-restore-modal .restore-info-box i {
      color: var(--color-break);
 }
-
+/* Thêm style cho icon Modal Settings mới */
+#settings-restore-modal .restore-info-box i {
+     color: var(--color-primary); 
+}
 
 .modal-actions {
     display: flex;
     justify-content: space-around;
     gap: 15px;
     margin-top: 25px;
-}
-
-.modal-actions button {
-    flex-grow: 1;
-}
-
-/* ================== RESPONSIVE ================== */
-
-@media (max-width: 1000px) {
-    .container {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto auto auto;
-        gap: 20px;
-    }
-    
-    .timer-card {
-        grid-column: 1 / 2;
-        grid-row: 1 / 2;
-    }
-    
-    .player-card {
-        grid-column: 1 / 2;
-        grid-row: 2 / 3;
-    }
-    
-    .playlist-card {
-        grid-column: 1 / 2;
-        grid-row: 3 / 4;
-    }
-    
-    .timer-display-box {
-         width: 100%;
-         max-width: 300px;
-         height: 80px;
-    }
-    
-    #countdown {
-        font-size: 4.5em;
-    }
 }
