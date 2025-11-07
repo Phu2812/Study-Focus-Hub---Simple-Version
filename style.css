@@ -56,24 +56,24 @@ header h1 {
     transition: background-color 0.5s;
 }
 
-.player-card {
-    grid-column: 2 / 3;
-    grid-row: 1 / 2;
-}
+/* ================== TIMER DISPLAY FIX ================== */
 
-.playlist-card {
-    grid-column: 2 / 3;
-    grid-row: 2 / 3;
+/* Khối cố định kích thước hiển thị Timer */
+.timer-display-box {
+    /* Đảm bảo chiều rộng đủ cho format H:MM:SS */
+    width: 280px; 
+    height: 100px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 10px 0 20px 0;
 }
-
-/* ================== TIMER STYLES ================== */
 
 #timer-mode {
     font-size: 1.5em;
     font-weight: 700;
     padding: 5px 15px;
     border-radius: 8px;
-    margin-bottom: 20px;
     transition: background-color 0.3s;
 }
 
@@ -88,93 +88,112 @@ header h1 {
 }
 
 #countdown {
-    font-size: 6em;
+    font-size: 5.5em; /* Giảm nhẹ để vừa với Giờ:Phút:Giây */
     font-weight: 200;
-    margin: 10px 0;
-    letter-spacing: 5px;
+    letter-spacing: 2px;
 }
 
 /* ======================================================= */
-/* FIX HOÀN TOÀN BỐ CỤC CÀI ĐẶT (SETTINGS) VỚI CSS GRID */
+/* CẢI THIỆN BỐ CỤC CÀI ĐẶT (SETTINGS) */
 /* ======================================================= */
-.timer-card h3 {
+
+.settings-title {
     text-align: center; 
-    margin-top: 25px; 
+    margin: 25px 0 15px 0; 
     padding-top: 15px;
     border-top: 1px solid #333;
     color: var(--color-primary);
     font-size: 1.5em;
     width: 100%; 
 }
+.settings-title i {
+    margin-right: 10px;
+    color: #4b5563;
+}
 
 .settings-group {
     width: 90%; 
     padding: 10px 0;
-    margin-top: 10px;
-    display: grid; 
-    grid-template-columns: 1fr 1fr; /* Chia 2 cột đều */
-    gap: 10px 20px;
-    align-items: center;
-    text-align: right; 
+    margin-top: 5px;
     border-bottom: 1px solid #282828; 
 }
 
-/* Tiêu đề "Cài đặt thời gian" (Nếu có) */
-.settings-group h3 {
-    grid-column: 1 / -1; 
-    text-align: center;
-    margin-bottom: 5px;
-    border-top: none; /* Tiêu đề này không cần border trên */
-}
-
-.settings-group label {
-    grid-column: 1 / 2; /* Label ở cột 1 */
-    margin: 0;
-    display: block; 
+.settings-group h4 {
     font-size: 1em;
-    font-weight: 500;
+    font-weight: 600;
+    margin: 0 0 10px 0;
+    text-align: left;
+    color: #b0b0b0;
+    text-transform: uppercase;
+}
+
+/* Hàng chứa input: Dùng Flexbox để căn chỉnh đồng đều */
+.settings-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Định dạng chung cho label/input trong Settings */
+.settings-row label {
+    font-size: 0.9em;
     color: #a0a0a0;
+    flex-basis: 30%; /* Chiếm 30% cho label */
+    text-align: right;
+    padding-right: 10px;
 }
 
-.settings-group input {
-    grid-column: 2 / 3; /* Input ở cột 2 */
+.settings-row input {
+    flex-basis: 70%; /* Chiếm 70% cho input */
     width: 100%;
-    box-sizing: border-box; 
     max-width: 80px; 
-    margin: 0;
-    display: block;
-    background-color: #333;
-    border: 1px solid #555;
-    color: var(--text-light);
     padding: 8px;
-    border-radius: 4px;
     text-align: center;
+    border-radius: 4px;
+    border: 1px solid #444;
+    background-color: #2c2c2c;
+    color: var(--text-light);
+    font-size: 1em;
+    box-sizing: border-box;
+    margin: 5px 0; /* Giảm khoảng cách dọc */
 }
 
-.settings-group input:focus {
+.settings-row input:focus {
     border-color: var(--color-primary);
     outline: none;
 }
 
-/* Xử lý cho Total Cycles (chỉ có 1 cặp input/label) để căn giữa */
-.settings-group label[for="setting-total-cycles"],
-#setting-total-cycles {
-    grid-column: 1 / -1;
-    text-align: center;
-    justify-self: center; /* Căn giữa nội dung trong ô grid */
+/* Nhóm chỉ có 1 input (Total Cycles) */
+.settings-row.single-input {
+    justify-content: center;
+    gap: 15px;
+}
+.settings-row.single-input label {
+    flex-basis: auto;
+    text-align: left;
+}
+.settings-row.single-input input {
+    flex-basis: auto;
+    max-width: 60px;
 }
 
-#setting-total-cycles {
-    max-width: 80px;
-    margin: 5px auto 10px auto; 
-}
-
-/* Xóa đường kẻ cuối cùng */
+/* Gỡ bỏ đường kẻ cuối cùng */
 .timer-card .settings-group:last-of-type {
     border-bottom: none;
 }
 
-/* ================== PLAYER & PLAYLIST ================== */
+/* ================== PLAYER & PLAYLIST STYLES (Giữ nguyên) ================== */
+
+.player-card {
+    grid-column: 2 / 3;
+    grid-row: 1 / 2;
+}
+
+.playlist-card {
+    grid-column: 2 / 3;
+    grid-row: 2 / 3;
+}
 
 .player-embed-container {
     position: relative;
@@ -355,7 +374,7 @@ header h1 {
     justify-content: center;
 }
 
-/* ================== MODAL STYLES ================== */
+/* ================== MODAL STYLES (Giữ nguyên) ================== */
 
 .modal {
     display: none; 
@@ -469,11 +488,13 @@ header h1 {
         grid-row: 3 / 4;
     }
     
-    #countdown {
-        font-size: 5em;
+    .timer-display-box {
+         width: 100%;
+         max-width: 300px;
+         height: 80px;
     }
     
-    .modal-actions {
-        flex-direction: column;
+    #countdown {
+        font-size: 4.5em;
     }
 }
